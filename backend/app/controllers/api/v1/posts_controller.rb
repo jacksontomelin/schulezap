@@ -3,35 +3,26 @@ module Api
     class PostsController < ApplicationController
       before_action :autenticar!
 
-      # GET /api/v1/feed  (ou ?grupo_id=)
       def index
         base = Post.visiveis.recentes.includes(:usuario, :grupo)
-
         if params[:grupo_id].present?
           escopo = base.where(grupo_id: params[:grupo_id])
+        elsif params[:usuario_id].present?
+          escopo = base.where(usuario_id: params[:usuario_id])
         else
-          ids_grupos = usuario_atual.grupos.pluck(:id)
-          escopo = if ids_grupos.any?
-                     base.where(grupo_id: ids_grupos)
-                   else
-                     # ainda sem grupos: mostra o mural da escola pra tela nao ficar vazia
-                     base.joins(:grupo).where(grupos: { escola_id: usuario_atual.escola_id })
-                   end
+          ids = usuario_atual.grupos.pluck(:id)
+          escopo = ids.any? ? base.where(grupo_id: ids) : base.joins(:grupo).where(grupos: { escola_id: usuario_atual.escola_id })
         end
-        posts = escopo.limit(50)
-
-        render json: posts.map { |p| serialize_post(p) }
+        render json: escopo.limit(50).map { |p| self.class.serialize(p, usuario_atual) }
       end
 
-      # POST /api/v1/posts
       def create
         grupo = grupo_para_postar
         MembroGrupo.find_or_create_by!(grupo: grupo, usuario: usuario_atual)
-        post = grupo.posts.create!(usuario: usuario_atual, texto: params[:texto])
-        render json: serialize_post(post), status: :created
+        post = grupo.posts.create!(usuario: usuario_atual, texto: params[:texto].to_s, imagem_url: params[:imagem_url])
+        render json: self.class.serialize(post, usuario_atual), status: :created
       end
 
-      # DELETE /api/v1/posts/:id  (autor ou moderador)
       def destroy
         post = Post.find(params[:id])
         unless post.usuario_id == usuario_atual.id || usuario_atual.moderador?
@@ -41,38 +32,38 @@ module Api
         render json: { ok: true }
       end
 
-      private
-
-      # escolhe onde postar: grupo pedido, senao o primeiro grupo do usuario,
-      # senao o grupo geral da turma (criado se preciso). Ninguem fica travado.
-      def grupo_para_postar
-        if params[:grupo_id].present?
-          return usuario_atual.escola.grupos.find(params[:grupo_id])
-        end
-        usuario_atual.grupos.first || usuario_atual.escola.grupos.first ||
-          usuario_atual.escola.grupos.create!(nome: "Mural da Escola", icone: "school", cor_tema: "red")
-      end
-
-      def serialize_post(p)
+      # serializer reutilizavel (usado tambem por salvos)
+      def self.serialize(p, u)
         {
           id: p.id,
           texto: p.texto,
+          imagem_url: p.imagem_url,
           created_at: p.created_at.iso8601,
-          tempo: tempo_relativo(p.created_at),
+          tempo: tempo_rel(p.created_at),
           grupo: { id: p.grupo_id, nome: p.grupo.nome },
           autor: p.usuario.as_json_publico,
           reacoes: p.reacoes_count,
+          por_tipo: p.reacoes_por_tipo,
+          minha_reacao: p.minha_reacao(u),
           comentarios: p.comentarios_count,
-          eu_reagi: p.reagiu?(usuario_atual)
+          salvo: Salvamento.exists?(usuario_id: u.id, post_id: p.id)
         }
       end
 
-      def tempo_relativo(t)
+      def self.tempo_rel(t)
         s = (Time.current - t).to_i
         return "agora" if s < 60
         return "#{s / 60} min" if s < 3600
         return "#{s / 3600} h" if s < 86_400
         "#{s / 86_400} d"
+      end
+
+      private
+
+      def grupo_para_postar
+        return usuario_atual.escola.grupos.find(params[:grupo_id]) if params[:grupo_id].present?
+        usuario_atual.grupos.first || usuario_atual.escola.grupos.first ||
+          usuario_atual.escola.grupos.create!(nome: "Mural da Escola", icone: "school", cor_tema: "red")
       end
     end
   end

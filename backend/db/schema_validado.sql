@@ -141,3 +141,27 @@ CREATE TABLE resultados_desafio (
   updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
 CREATE UNIQUE INDEX idx_resultados_desafio_uniq ON resultados_desafio(usuario_id, desafio, dia);
+
+-- migration 8: social
+ALTER TABLE posts ADD COLUMN imagem_url TEXT;
+ALTER TABLE usuarios ADD COLUMN bio VARCHAR(160);
+ALTER TABLE usuarios ADD COLUMN capa_cor VARCHAR DEFAULT '#F7B500';
+ALTER TABLE comentarios ADD COLUMN respondendo_id BIGINT REFERENCES comentarios(id);
+
+CREATE TABLE amizades (
+  id BIGSERIAL PRIMARY KEY,
+  seguidor_id BIGINT NOT NULL REFERENCES usuarios(id),
+  seguido_id BIGINT NOT NULL REFERENCES usuarios(id),
+  created_at TIMESTAMP NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX idx_amizades_uniq ON amizades(seguidor_id, seguido_id);
+
+CREATE TABLE salvamentos (
+  id BIGSERIAL PRIMARY KEY,
+  usuario_id BIGINT NOT NULL REFERENCES usuarios(id),
+  post_id BIGINT NOT NULL REFERENCES posts(id),
+  created_at TIMESTAMP NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX idx_salvamentos_uniq ON salvamentos(usuario_id, post_id);

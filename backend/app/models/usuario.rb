@@ -12,6 +12,14 @@ class Usuario < ApplicationRecord
   has_many :reacoes, class_name: "Reacao", dependent: :destroy
   has_many :medalhas, class_name: "Medalha", dependent: :destroy
   has_many :resultados_desafio, class_name: "ResultadoDesafio", dependent: :destroy
+  has_many :salvamentos, class_name: "Salvamento", dependent: :destroy
+  has_many :posts_salvos, through: :salvamentos, source: :post
+
+  # amizades (seguir)
+  has_many :relacoes_seguindo, class_name: "Amizade", foreign_key: :seguidor_id, dependent: :destroy
+  has_many :seguindo, through: :relacoes_seguindo, source: :seguido
+  has_many :relacoes_seguidores, class_name: "Amizade", foreign_key: :seguido_id, dependent: :destroy
+  has_many :seguidores, through: :relacoes_seguidores, source: :seguidor
 
   enum :papel, { aluno: 0, responsavel: 1, admin: 2 }, default: :aluno
 
@@ -25,6 +33,10 @@ class Usuario < ApplicationRecord
 
   def moderador?
     responsavel? || admin?
+  end
+
+  def segue?(outro)
+    seguindo.exists?(outro.id)
   end
 
   # soma pontos de forma atomica (sem race condition)
@@ -48,7 +60,8 @@ class Usuario < ApplicationRecord
       avatar_inicial: avatar_inicial,
       avatar_cor: avatar_cor,
       status_icone: status_icone,
-      pontos: respond_to?(:pontos) ? pontos : 0
+      pontos: respond_to?(:pontos) ? pontos : 0,
+      bio: respond_to?(:bio) ? bio : nil
     }
   end
 

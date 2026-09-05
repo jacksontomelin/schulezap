@@ -10,7 +10,9 @@ Rails.application.routes.draw do
       get   "feed",             to: "posts#index"
       post  "posts",            to: "posts#create"
       delete "posts/:id",       to: "posts#destroy"
-      post  "posts/:id/reagir", to: "reacoes#toggle"
+      post  "posts/:id/reagir",   to: "reacoes#toggle"
+      post  "posts/:id/salvar",   to: "salvamentos#toggle"
+      get   "salvos",             to: "salvamentos#index"
       post  "posts/:id/denunciar", to: "denuncias#create"
 
       get  "posts/:post_id/comentarios", to: "comentarios#index"
@@ -26,6 +28,10 @@ Rails.application.routes.draw do
       get  "desafios/hoje",               to: "desafios#hoje"
       get  "ranking",                     to: "ranking#index"
       get  "notificacoes",                to: "notificacoes#index"
+
+      # social
+      post "usuarios/:id/seguir", to: "amizades#seguir"
+      get  "busca",               to: "busca#index"
 
       get "perfil",        to: "perfil#show"
       patch "perfil",      to: "perfil#update"

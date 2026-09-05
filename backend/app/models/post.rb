@@ -7,6 +7,7 @@ class Post < ApplicationRecord
   has_many :comentarios, class_name: "Comentario", dependent: :destroy
   has_many :reacoes, class_name: "Reacao", dependent: :destroy
   has_many :denuncias, class_name: "Denuncia", dependent: :destroy
+  has_many :salvamentos, class_name: "Salvamento", dependent: :destroy
 
   validates :texto, presence: true, length: { maximum: 2000 }
 
@@ -15,6 +16,15 @@ class Post < ApplicationRecord
 
   def reagiu?(usuario)
     reacoes.exists?(usuario_id: usuario.id)
+  end
+
+  def minha_reacao(usuario)
+    reacoes.find_by(usuario_id: usuario.id)&.tipo
+  end
+
+  # contagem por tipo: { "curtida" => 3, "amei" => 1 }
+  def reacoes_por_tipo
+    reacoes.group(:tipo).count
   end
 
   def ocultar!(moderador)
