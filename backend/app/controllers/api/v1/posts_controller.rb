@@ -5,11 +5,19 @@ module Api
 
       # GET /api/v1/feed  (ou ?grupo_id=)
       def index
-        escopo = Post.visiveis.recentes
-                     .includes(:usuario, :grupo)
-                     .joins(:grupo).where(grupos: { escola_id: usuario_atual.escola_id })
+        base = Post.visiveis.recentes.includes(:usuario, :grupo)
 
-        escopo = escopo.where(grupo_id: params[:grupo_id]) if params[:grupo_id].present?
+        if params[:grupo_id].present?
+          escopo = base.where(grupo_id: params[:grupo_id])
+        else
+          ids_grupos = usuario_atual.grupos.pluck(:id)
+          escopo = if ids_grupos.any?
+                     base.where(grupo_id: ids_grupos)
+                   else
+                     # ainda sem grupos: mostra o mural da escola pra tela nao ficar vazia
+                     base.joins(:grupo).where(grupos: { escola_id: usuario_atual.escola_id })
+                   end
+        end
         posts = escopo.limit(50)
 
         render json: posts.map { |p| serialize_post(p) }
@@ -17,7 +25,8 @@ module Api
 
       # POST /api/v1/posts
       def create
-        grupo = usuario_atual.escola.grupos.find(params[:grupo_id])
+        grupo = grupo_para_postar
+        MembroGrupo.find_or_create_by!(grupo: grupo, usuario: usuario_atual)
         post = grupo.posts.create!(usuario: usuario_atual, texto: params[:texto])
         render json: serialize_post(post), status: :created
       end
@@ -33,6 +42,16 @@ module Api
       end
 
       private
+
+      # escolhe onde postar: grupo pedido, senao o primeiro grupo do usuario,
+      # senao o grupo geral da turma (criado se preciso). Ninguem fica travado.
+      def grupo_para_postar
+        if params[:grupo_id].present?
+          return usuario_atual.escola.grupos.find(params[:grupo_id])
+        end
+        usuario_atual.grupos.first || usuario_atual.escola.grupos.first ||
+          usuario_atual.escola.grupos.create!(nome: "Mural da Escola", icone: "school", cor_tema: "red")
+      end
 
       def serialize_post(p)
         {

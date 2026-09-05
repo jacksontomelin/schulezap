@@ -30,7 +30,9 @@ turma  = escola.grupos.find_or_create_by!(nome: "Turma 6ºB") { |g| g.icone = "s
 futebol = escola.grupos.find_or_create_by!(nome: "Grupo do Futebol") { |g| g.icone = "ball"; g.cor_tema = "blue" }
 alemao = escola.grupos.find_or_create_by!(nome: "Clube de Alemão") { |g| g.icone = "language"; g.cor_tema = "gold" }
 
-[marco, bel, lucas].each { |u| MembroGrupo.find_or_create_by!(grupo: turma, usuario: u) }
+[marco, bel, lucas, diretora].each { |u| MembroGrupo.find_or_create_by!(grupo: turma, usuario: u) }
+MembroGrupo.find_or_create_by!(grupo: futebol, usuario: marco)
+MembroGrupo.find_or_create_by!(grupo: alemao, usuario: marco)
 MembroGrupo.find_or_create_by!(grupo: futebol, usuario: bel)
 
 # Posts demo
