@@ -61,6 +61,13 @@ export const api = {
   sairGrupo: (id) => req(`/grupos/${id}/sair`, { method: "POST" }),
   criarGrupo: (nome, icone, cor_tema) => req("/grupos", { method: "POST", body: { nome, icone, cor_tema } }),
 
+  // desafios, ranking, notificacoes
+  desafioResultado: (desafio, acertos, total) =>
+    req(`/desafios/${desafio}/resultado`, { method: "POST", body: { acertos, total } }),
+  desafiosHoje: () => req("/desafios/hoje"),
+  ranking: () => req("/ranking"),
+  notificacoes: () => req("/notificacoes"),
+
   // perfil
   perfil: (id) => req(id ? `/perfil/${id}` : "/perfil"),
   atualizarPerfil: (dados) => req("/perfil", { method: "PATCH", body: dados }),

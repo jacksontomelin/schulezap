@@ -11,6 +11,7 @@ class Usuario < ApplicationRecord
   has_many :comentarios, class_name: "Comentario", dependent: :destroy
   has_many :reacoes, class_name: "Reacao", dependent: :destroy
   has_many :medalhas, class_name: "Medalha", dependent: :destroy
+  has_many :resultados_desafio, class_name: "ResultadoDesafio", dependent: :destroy
 
   enum :papel, { aluno: 0, responsavel: 1, admin: 2 }, default: :aluno
 
@@ -26,6 +27,18 @@ class Usuario < ApplicationRecord
     responsavel? || admin?
   end
 
+  # soma pontos de forma atomica (sem race condition)
+  def pontuar!(qtd)
+    self.class.where(id: id).update_all(["pontos = pontos + ?", qtd])
+    reload
+  end
+
+  # concede medalha se ainda nao tem; retorna a medalha nova ou nil
+  def conceder_medalha!(chave, titulo, icone = "medal")
+    return nil if medalhas.exists?(chave: chave)
+    medalhas.create!(chave: chave, titulo: titulo, icone: icone)
+  end
+
   # aluno so precisa de senha se tiver email; senha do convite pode ser simples.
   def as_json_publico
     {
@@ -34,7 +47,8 @@ class Usuario < ApplicationRecord
       papel: papel,
       avatar_inicial: avatar_inicial,
       avatar_cor: avatar_cor,
-      status_icone: status_icone
+      status_icone: status_icone,
+      pontos: respond_to?(:pontos) ? pontos : 0
     }
   end
 

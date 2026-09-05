@@ -18,7 +18,7 @@
 /* top */
 .app-top { background: #fff; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--line); flex-shrink: 0; }
 .app-top-brand { display: flex; align-items: center; gap: 9px; }
-.app-top-logo { width: 32px; height: 32px; border-radius: 9px; object-fit: cover; }
+.app-top-logo { width: 34px; height: 34px; border-radius: 10px; object-fit: cover; background: #fff; padding: 2px; border: 2px solid var(--line); }
 .app-top-icons { display: flex; gap: 4px; }
 .app-icon-btn { position: relative; background: none; color: var(--ink); width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; transition: background .12s; }
 .app-icon-btn:hover { background: var(--cream); }
@@ -134,3 +134,79 @@
 .mod-convite span { font-size: 12px; font-weight: 700; color: var(--ink-3); }
 .mod-convite.is-usado { opacity: .6; }
 .mod-convite.is-usado code { color: var(--ink-3); }
+
+/* ---------- TOPBAR: botão ativo ---------- */
+.app-icon-btn.is-on { background: var(--gold-light); color: var(--gold-text); }
+
+/* ---------- NOTIFICAÇÕES (painel) ---------- */
+.notif { background: #fff; border-bottom: 2px solid var(--line); max-height: 320px; overflow-y: auto; animation: fadeUp .18s ease; }
+.notif-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px 6px 16px; }
+.notif-head strong { font-size: 15px; font-weight: 900; }
+.notif-item { display: flex; gap: 10px; padding: 10px 16px; border-top: 1px solid var(--line); }
+.notif-body { flex: 1; min-width: 0; }
+.notif-body p { font-size: 13.5px; font-weight: 700; color: var(--ink); line-height: 1.4; margin: 0; }
+.notif-body em { font-style: normal; color: var(--ink-2); }
+.notif-body span { font-size: 11.5px; font-weight: 700; color: var(--ink-3); }
+
+/* ---------- POST: menu "..." ---------- */
+.post-menu-wrap { position: relative; }
+.post-menu { position: absolute; right: 0; top: 38px; background: #fff; border: 2px solid var(--line-2); border-radius: 12px; padding: 6px; min-width: 170px; z-index: 5; box-shadow: 0 8px 20px rgba(43,29,6,.15); animation: fadeUp .12s ease; }
+.post-menu button { width: 100%; display: flex; align-items: center; gap: 8px; background: none; border: none; padding: 9px 10px; border-radius: 8px; font-family: var(--font); font-weight: 800; font-size: 13.5px; color: var(--ink); text-align: left; }
+.post-menu button:hover { background: var(--cream); }
+.post-menu button:first-child { color: var(--red); }
+
+/* ---------- COMENTÁRIOS ---------- */
+.coments { margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--line); }
+.coments-empty { font-size: 13px; font-weight: 700; color: var(--ink-3); margin: 0 0 10px; }
+.coment { display: flex; gap: 8px; margin-bottom: 10px; }
+.coment > div { background: var(--cream); border-radius: 12px; padding: 8px 12px; flex: 1; }
+.coment strong { font-size: 12.5px; font-weight: 900; display: block; }
+.coment p { font-size: 13.5px; font-weight: 700; margin: 2px 0 0; line-height: 1.4; }
+.coment-form { display: flex; gap: 8px; margin-top: 4px; }
+.coment-form .input { height: 40px; font-size: 14px; flex: 1; }
+.coment-form .btn-sm { padding: 0 12px; height: 40px; }
+
+/* ---------- GRUPOS: criar ---------- */
+.criar-grupo { background: #fff; border: 2px solid var(--line-2); border-radius: 16px; padding: 14px; margin-bottom: 14px; animation: fadeUp .15s ease; }
+.icone-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.icone-grid .status-btn { height: 44px; }
+
+/* ---------- DESAFIOS ---------- */
+.jogos-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.pontos-chip { display: inline-flex; align-items: center; gap: 5px; background: var(--gold); color: #4A3000; font-weight: 900; font-size: 13px; padding: 7px 12px; border-radius: 999px; white-space: nowrap; box-shadow: 0 3px 0 var(--gold-dark); }
+.row-card.is-done { opacity: .7; background: var(--cream); }
+.voltar-link { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; font-family: var(--font); font-weight: 800; font-size: 13px; color: var(--ink-2); padding: 0; margin-bottom: 12px; }
+.palavra-de { font-size: 34px; font-weight: 900; color: var(--ink); text-align: center; margin: 6px 0 2px; letter-spacing: -.02em; }
+.result-pts { font-size: 20px; font-weight: 900; color: var(--red); margin-top: 6px; }
+.desenho-card { background: var(--gold); border-radius: 18px; padding: 16px; margin-top: 8px; overflow: hidden; }
+.desenho-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.desenho-head > div { display: flex; flex-direction: column; }
+.desenho-head strong { font-size: 15px; font-weight: 900; }
+.desenho-head span { font-size: 12px; font-weight: 700; color: var(--red-dark); }
+.desenho-tema { font-size: 20px; font-weight: 900; color: var(--ink); margin: 0 0 14px; font-style: italic; }
+
+/* placar */
+.placar { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 8px 0 4px; }
+.placar-time { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; color: var(--ink-2); }
+.placar-num { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.placar-num strong { font-size: 32px; font-weight: 900; color: var(--ink); line-height: 1; width: 44px; text-align: center; }
+.placar-num .status-btn { width: 44px; height: 36px; }
+.placar-x { font-size: 24px; font-weight: 900; color: var(--red-dark); }
+.placar-nota { font-size: 12px; font-weight: 700; color: var(--red-dark); text-align: center; margin: 10px 0 0; }
+
+/* ---------- RANKING ---------- */
+.rank-me { background: var(--gold); border-radius: 18px; padding: 16px; display: flex; gap: 12px; margin-bottom: 16px; overflow: hidden; }
+.rank-me > div { flex: 1; display: flex; flex-direction: column; background: rgba(255,255,255,.7); border-radius: 12px; padding: 10px 14px; }
+.rank-me span { font-size: 12px; font-weight: 800; color: var(--ink-2); }
+.rank-me strong { font-size: 26px; font-weight: 900; color: var(--red); line-height: 1.1; }
+.rank-row { display: flex; align-items: center; gap: 10px; background: #fff; border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; }
+.rank-row.is-me { border-color: var(--gold); background: var(--gold-light); }
+.rank-pos { width: 30px; display: flex; justify-content: center; }
+.rank-pos span { font-weight: 900; font-size: 14px; color: var(--ink-3); }
+.rank-nome { flex: 1; font-size: 14.5px; font-weight: 900; }
+.rank-nome em { font-style: normal; font-weight: 700; color: var(--ink-3); font-size: 12px; }
+.rank-pts { font-weight: 900; font-size: 14px; color: var(--red); }
+
+/* convites clicáveis */
+.mod-convite { cursor: pointer; font-family: var(--font); width: 100%; text-align: left; }
+.mod-convite.is-usado { cursor: default; }

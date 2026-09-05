@@ -124,3 +124,20 @@ CREATE TABLE denuncias (
   updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_denuncias_status ON denuncias(status);
+
+-- migration 7: pontos + desafios
+ALTER TABLE usuarios ADD COLUMN pontos INTEGER NOT NULL DEFAULT 0;
+CREATE INDEX idx_usuarios_escola_pontos ON usuarios(escola_id, pontos);
+
+CREATE TABLE resultados_desafio (
+  id BIGSERIAL PRIMARY KEY,
+  usuario_id BIGINT NOT NULL REFERENCES usuarios(id),
+  desafio VARCHAR NOT NULL,
+  acertos INTEGER NOT NULL DEFAULT 0,
+  total INTEGER NOT NULL DEFAULT 0,
+  pontos_ganhos INTEGER NOT NULL DEFAULT 0,
+  dia DATE NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX idx_resultados_desafio_uniq ON resultados_desafio(usuario_id, desafio, dia);

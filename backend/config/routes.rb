@@ -21,6 +21,12 @@ Rails.application.routes.draw do
         post "sair",   on: :member
       end
 
+      # desafios, ranking e notificacoes
+      post "desafios/:desafio/resultado", to: "desafios#resultado"
+      get  "desafios/hoje",               to: "desafios#hoje"
+      get  "ranking",                     to: "ranking#index"
+      get  "notificacoes",                to: "notificacoes#index"
+
       get "perfil",        to: "perfil#show"
       patch "perfil",      to: "perfil#update"
       get "perfil/:id",    to: "perfil#show"

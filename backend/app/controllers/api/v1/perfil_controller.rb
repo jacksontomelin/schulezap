@@ -12,7 +12,9 @@ module Api
           stats: {
             posts: posts.count,
             curtidas: Reacao.where(post_id: posts.select(:id)).count,
-            grupos: u.grupos.count
+            grupos: u.grupos.count,
+            pontos: u.pontos,
+            ranking: u.escola.usuarios.aluno.where("pontos > ?", u.pontos).count + 1
           },
           medalhas: u.medalhas.order(conquistada_em: :desc).map { |m|
             { chave: m.chave, titulo: m.titulo, icone: m.icone }
