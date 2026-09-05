@@ -51,6 +51,22 @@ Medalha.find_or_create_by!(usuario: marco, chave: "primeiro_post") { |m| m.titul
 # Convites disponiveis
 3.times { escola.convites.find_or_create_by!(turma_sugerida: "6B") { |c| c.gerado_por = diretora } rescue nil }
 
+# --- social: bios, seguir, conversa exemplo ---
+marco.update(bio: "Curto games e futebol") if marco.bio.blank?
+bel.update(bio: "Craque do futebol ⚽") if bel.bio.blank?
+lucas.update(bio: "Servidor sempre on 🎮") if lucas.bio.blank?
+
+Amizade.find_or_create_by!(seguidor: marco, seguido: bel)
+Amizade.find_or_create_by!(seguidor: marco, seguido: lucas)
+Amizade.find_or_create_by!(seguidor: bel, seguido: marco)
+
+conversa = Conversa.entre(marco, bel)
+if conversa.mensagens.empty?
+  conversa.mensagens.create!(remetente: bel, texto: "Oi Marco! Viu o jogo de sábado?")
+  conversa.mensagens.create!(remetente: marco, texto: "Vi sim! Que golaço no final")
+  conversa.mensagens.create!(remetente: bel, texto: "Bora jogar hoje depois da aula?")
+end
+
 puts "Pronto!"
 puts "  Escola: #{escola.nome}"
 puts "  Login aluno:  Marco / 123456"
