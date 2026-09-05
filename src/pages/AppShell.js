@@ -255,6 +255,8 @@ function Notificacoes({ fechar }) {
 
 /* ===================== FEED ===================== */
 function Feed({ usuario, showToast, temaInicial, limparTema, abrirPerfil }) {
+  const [modo, setModo] = useState('turma');
+  const [foto, setFoto] = useState(null);
   const [posts, setPosts] = useState(API_ATIVA ? [] : DEMO_POSTS);
   const [draft, setDraft] = useState('');
   const [imagem, setImagem] = useState(null);
@@ -268,9 +270,9 @@ function Feed({ usuario, showToast, temaInicial, limparTema, abrirPerfil }) {
 
   const carregar = useCallback(async () => {
     if (!API_ATIVA) return;
-    try { setCarregando(true); setPosts(await api.feed()); }
+    try { setCarregando(true); setPosts(await api.feed(modo === 'seguindo' ? { modo: 'seguindo' } : {})); }
     catch (e) { showToast(e.message); } finally { setCarregando(false); }
-  }, [showToast]);
+  }, [showToast, modo]);
   useEffect(() => { carregar(); }, [carregar]);
 
   const escolherFoto = (e) => {
@@ -322,9 +324,11 @@ function Feed({ usuario, showToast, temaInicial, limparTema, abrirPerfil }) {
 
   return (
     <div onClick={() => menu && setMenu(null)}>
-      <div className="stories">
-        <div className="story"><div className="story-add"><Icon name="plus" size={18} stroke={2.5} /></div><span>Você</span></div>
-        {stories.map((a) => <button key={a.apelido} className="story" onClick={() => a.id && abrirPerfil(a.id)}><Avatar initial={a.avatar_inicial} size={46} ring /><span>{a.apelido}</span></button>)}
+      <BarraStories usuario={usuario} showToast={showToast} />
+
+      <div className="feed-abas">
+        <button className={modo === 'turma' ? 'is-on' : ''} onClick={() => setModo('turma')}>Da turma</button>
+        <button className={modo === 'seguindo' ? 'is-on' : ''} onClick={() => setModo('seguindo')}>Quem eu sigo</button>
       </div>
 
       <div className="composer">
@@ -349,16 +353,17 @@ function Feed({ usuario, showToast, temaInicial, limparTema, abrirPerfil }) {
         <PostCard key={p.id} p={p} usuario={usuario} ehModerador={ehModerador}
           menuAberto={menu === p.id} setMenu={(v) => setMenu(v ? p.id : null)}
           comentariosAbertos={aberto === p.id} toggleComentarios={() => setAberto(aberto === p.id ? null : p.id)}
-          onReagir={reagir} onSalvar={salvar} onRemover={remover} onDenunciar={denunciar} abrirPerfil={abrirPerfil}
+          onReagir={reagir} onSalvar={salvar} onRemover={remover} onDenunciar={denunciar} abrirPerfil={abrirPerfil} abrirFoto={(src) => setFoto({ src, autor: p.autor.apelido })}
           onNovoComentario={() => setPosts((ps) => ps.map((x) => x.id === p.id ? { ...x, comentarios: x.comentarios + 1 } : x))}
           showToast={showToast} />
       ))}
       {!carregando && posts.length > 0 && <p className="feed-end">Você viu tudo por aqui.</p>}
+      {foto && <Lightbox src={foto.src} autor={foto.autor} fechar={() => setFoto(null)} />}
     </div>
   );
 }
 
-function PostCard({ p, usuario, ehModerador, menuAberto, setMenu, comentariosAbertos, toggleComentarios, onReagir, onSalvar, onRemover, onDenunciar, abrirPerfil, onNovoComentario, showToast }) {
+function PostCard({ p, usuario, ehModerador, menuAberto, setMenu, comentariosAbertos, toggleComentarios, onReagir, onSalvar, onRemover, onDenunciar, abrirPerfil, onNovoComentario, showToast, abrirFoto }) {
   const [picker, setPicker] = useState(false);
   const meu = p.autor?.id === usuario.id || p.autor?.apelido === usuario.apelido;
   const minha = p.minha_reacao;
@@ -384,7 +389,7 @@ function PostCard({ p, usuario, ehModerador, menuAberto, setMenu, comentariosAbe
         </div>
       </div>
       {p.texto && <p className="post-text">{p.texto}</p>}
-      {p.imagem_url && <div className="post-img"><img src={p.imagem_url} alt="" /></div>}
+      {p.imagem_url && <button className="post-img" onClick={() => abrirFoto?.(p.imagem_url)}><img src={p.imagem_url} alt="" /></button>}
       {p.reacoes > 0 && (
         <div className="post-resumo">
           <span className="post-resumo-emojis">{tipos.map((t) => <span key={t}>{emojiDe(t)}</span>)}</span>
@@ -530,6 +535,8 @@ function PerfilOutro({ id, usuario, showToast, voltar, abrirChat }) {
   const [dados, setDados] = useState(null);
   const [posts, setPosts] = useState([]);
   const [seguindo, setSeguindo] = useState(false);
+  const [aba, setAba] = useState('posts');
+  const [foto, setFoto] = useState(null);
 
   useEffect(() => {
     if (!API_ATIVA) {
@@ -538,7 +545,7 @@ function PerfilOutro({ id, usuario, showToast, voltar, abrirChat }) {
       return;
     }
     api.perfil(id).then((d) => { setDados(d); setSeguindo(d.eu_sigo); }).catch((e) => showToast(e.message));
-    api.feed && fetch(`${process.env.REACT_APP_API_URL}/feed?usuario_id=${id}`, { headers: { Authorization: `Bearer ${window.__sz_token}` } }).then((r) => r.json()).then(setPosts).catch(() => {});
+    api.feed({ usuarioId: id }).then(setPosts).catch(() => {});
   }, [id, showToast]);
 
   const toggleSeguir = async () => {
@@ -550,6 +557,7 @@ function PerfilOutro({ id, usuario, showToast, voltar, abrirChat }) {
 
   if (!dados) return <p className="feed-end">Carregando perfil…</p>;
   const u = dados.usuario;
+  const fotos = posts.filter((p) => p.imagem_url);
   const tones = ['gold', 'red', 'blue', 'green'];
 
   return (
@@ -581,15 +589,32 @@ function PerfilOutro({ id, usuario, showToast, voltar, abrirChat }) {
           <p className="label">Conquistas</p>
           <div className="badges">{dados.medalhas.map((m, i) => <div key={m.titulo} className="badge-card"><Tile icon={m.icone || 'medal'} tone={tones[i % 4]} size={36} radius={10} /><span>{m.titulo}</span></div>)}</div>
         </>)}
-        <p className="label" style={{ marginTop: 22 }}>Posts de {u.apelido}</p>
-        {posts.length === 0 && <p className="coments-empty">Ainda não postou nada.</p>}
-        {posts.map((p) => (
-          <div key={p.id} className="mini-post">
-            {p.texto && <p>{p.texto}</p>}
-            {p.imagem_url && <img src={p.imagem_url} alt="" />}
-            <span>{emojiDe(p.minha_reacao || 'curtida')} {p.reacoes} · {p.comentarios} comentários</span>
+        <div className="perfil-abas">
+          <button className={aba === 'posts' ? 'is-on' : ''} onClick={() => setAba('posts')}><Icon name="grid" size={16} /> Posts</button>
+          <button className={aba === 'fotos' ? 'is-on' : ''} onClick={() => setAba('fotos')}><Icon name="photo" size={16} /> Fotos</button>
+        </div>
+        {aba === 'posts' && (<>
+          {posts.length === 0 && <p className="coments-empty">Ainda não postou nada.</p>}
+          {posts.map((p) => (
+            <div key={p.id} className="mini-post">
+              {p.texto && <p>{p.texto}</p>}
+              {p.imagem_url && <img src={p.imagem_url} alt="" onClick={() => setFoto(p.imagem_url)} />}
+              <span>{emojiDe(p.minha_reacao || 'curtida')} {p.reacoes} · {p.comentarios} comentários</span>
+            </div>
+          ))}
+        </>)}
+        {aba === 'fotos' && (<>
+          {fotos.length === 0 && <p className="coments-empty">Nenhuma foto ainda.</p>}
+          <div className="grade-fotos">
+            {fotos.map((p) => (
+              <button key={p.id} className="grade-item" onClick={() => setFoto(p.imagem_url)}>
+                <img src={p.imagem_url} alt="" />
+                <span><Icon name="heart" size={14} style={{ fill: 'currentColor' }} /> {p.reacoes}</span>
+              </button>
+            ))}
           </div>
-        ))}
+        </>)}
+        {foto && <Lightbox src={foto} autor={u.apelido} fechar={() => setFoto(null)} />}
       </div>
     </div>
   );
@@ -1053,6 +1078,170 @@ function Chat({ conversaId, usuario, showToast, voltar }) {
         <input className="input" value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && enviar()} placeholder="Escreva uma mensagem…" />
         <button className="btn btn-red btn-sm" onClick={enviar} disabled={enviando}><Icon name="send" size={16} /></button>
       </div>
+    </div>
+  );
+}
+
+/* ===================== VISUALIZADOR DE FOTO (lightbox) ===================== */
+function Lightbox({ src, autor, fechar }) {
+  useEffect(() => {
+    const esc = (e) => e.key === 'Escape' && fechar();
+    window.addEventListener('keydown', esc);
+    return () => window.removeEventListener('keydown', esc);
+  }, [fechar]);
+  return (
+    <div className="lightbox" onClick={fechar}>
+      <button className="lightbox-x" onClick={fechar} aria-label="Fechar"><Icon name="x" size={24} stroke={2.5} /></button>
+      <img src={src} alt="" onClick={(e) => e.stopPropagation()} />
+      {autor && <p className="lightbox-autor">{autor}</p>}
+    </div>
+  );
+}
+
+/* ===================== STORIES ===================== */
+const DEMO_STORIES = [
+  { usuario: { id: 12, apelido: 'Bel', avatar_inicial: 'B' }, sou_eu: false, todos_vistos: false, stories: [
+    { id: 1, texto: 'Treino hoje às 18h! ⚽', cor_fundo: '#C62828', tempo: '2 h', visto: false },
+    { id: 2, texto: 'Bora ganhar esse jogo', cor_fundo: '#2E86C1', tempo: '1 h', visto: false }] },
+  { usuario: { id: 13, apelido: 'Lucas', avatar_inicial: 'L' }, sou_eu: false, todos_vistos: true, stories: [
+    { id: 3, texto: 'Servidor novo no ar 🎮', cor_fundo: '#5B8C2A', tempo: '5 h', visto: true }] },
+];
+
+function BarraStories({ usuario, showToast, recarregar }) {
+  const [grupos, setGrupos] = useState(API_ATIVA ? [] : DEMO_STORIES);
+  const [vendo, setVendo] = useState(null);   // índice do grupo aberto
+  const [criando, setCriando] = useState(false);
+
+  const carregar = useCallback(async () => {
+    if (!API_ATIVA) return;
+    try { setGrupos(await api.stories()); } catch (e) { /* silencioso */ }
+  }, []);
+  useEffect(() => { carregar(); }, [carregar]);
+
+  const meu = grupos.find((g) => g.sou_eu);
+  const outros = grupos.filter((g) => !g.sou_eu);
+
+  return (
+    <>
+      <div className="stories">
+        <button className="story" onClick={() => meu ? setVendo(grupos.indexOf(meu)) : setCriando(true)}>
+          <div className={meu ? 'story-ring-meu' : 'story-add'}>
+            {meu ? <Avatar initial={usuario.avatar_inicial} size={46} /> : <Icon name="plus" size={18} stroke={2.5} />}
+          </div>
+          <span>Seu story</span>
+        </button>
+        {meu && <button className="story story-add-mini" onClick={() => setCriando(true)}><div className="story-add"><Icon name="plus" size={16} stroke={2.5} /></div><span>Novo</span></button>}
+        {outros.map((g) => (
+          <button key={g.usuario.id} className="story" onClick={() => setVendo(grupos.indexOf(g))}>
+            <div className={g.todos_vistos ? 'story-visto' : 'story-ring'}><Avatar initial={g.usuario.avatar_inicial} size={46} /></div>
+            <span>{g.usuario.apelido}</span>
+          </button>
+        ))}
+        {grupos.length === 0 && <span className="stories-vazio">Poste o primeiro story da turma!</span>}
+      </div>
+
+      {criando && <CriarStory usuario={usuario} fechar={() => setCriando(false)} aoCriar={() => { setCriando(false); carregar(); showToast('Story publicado! Some em 24h'); }} showToast={showToast} />}
+      {vendo !== null && <VerStories grupos={grupos} inicio={vendo} fechar={() => { setVendo(null); carregar(); }} />}
+    </>
+  );
+}
+
+const CORES_STORY = ['#F7B500', '#C62828', '#2E86C1', '#5B8C2A', '#8E44AD', '#2B1D06'];
+
+function CriarStory({ usuario, fechar, aoCriar, showToast }) {
+  const [texto, setTexto] = useState('');
+  const [imagem, setImagem] = useState(null);
+  const [cor, setCor] = useState('#F7B500');
+  const [enviando, setEnviando] = useState(false);
+  const fileRef = React.useRef(null);
+
+  const escolher = (e) => {
+    const f = e.target.files?.[0]; if (!f) return;
+    if (f.size > 1.5 * 1024 * 1024) { showToast('Imagem muito grande (máx 1,5 MB)'); return; }
+    const r = new FileReader(); r.onload = () => setImagem(r.result); r.readAsDataURL(f);
+  };
+
+  const publicar = async () => {
+    if (!texto.trim() && !imagem) { showToast('Escreva algo ou escolha uma foto'); return; }
+    if (!API_ATIVA) { aoCriar(); return; }
+    try { setEnviando(true); await api.criarStory(imagem, texto.trim(), cor); aoCriar(); }
+    catch (e) { showToast(e.message); } finally { setEnviando(false); }
+  };
+
+  return (
+    <div className="story-modal">
+      <div className="story-modal-card">
+        <div className="story-modal-head">
+          <strong>Novo story</strong>
+          <button className="app-icon-btn" onClick={fechar} aria-label="Fechar"><Icon name="x" size={20} /></button>
+        </div>
+        <div className="story-previa" style={{ background: imagem ? '#000' : cor }}>
+          {imagem ? <img src={imagem} alt="" /> : <p>{texto || 'Seu story aparece aqui'}</p>}
+        </div>
+        <input className="input" value={texto} maxLength={120} onChange={(e) => setTexto(e.target.value)} placeholder="Escreva algo…" style={{ marginTop: 12 }} />
+        {!imagem && (
+          <div className="story-cores">
+            {CORES_STORY.map((c) => <button key={c} className={`story-cor ${cor === c ? 'is-on' : ''}`} style={{ background: c }} onClick={() => setCor(c)} aria-label={c} />)}
+          </div>
+        )}
+        <div className="story-modal-acoes">
+          <input ref={fileRef} type="file" accept="image/*" hidden onChange={escolher} />
+          <button className="btn btn-ghost btn-sm" onClick={() => imagem ? setImagem(null) : fileRef.current?.click()}>
+            <Icon name="photo" size={16} /> {imagem ? 'Remover foto' : 'Foto'}
+          </button>
+          <button className="btn btn-red btn-sm" onClick={publicar} disabled={enviando}><Icon name="send" size={16} /> Publicar</button>
+        </div>
+        <p className="story-nota">Seu story some sozinho depois de 24 horas.</p>
+      </div>
+    </div>
+  );
+}
+
+function VerStories({ grupos, inicio, fechar }) {
+  const [gi, setGi] = useState(inicio);
+  const [si, setSi] = useState(0);
+  const grupo = grupos[gi];
+  const story = grupo?.stories[si];
+
+  const avancar = useCallback(() => {
+    if (!grupo) return fechar();
+    if (si + 1 < grupo.stories.length) setSi(si + 1);
+    else if (gi + 1 < grupos.length) { setGi(gi + 1); setSi(0); }
+    else fechar();
+  }, [grupo, si, gi, grupos.length, fechar]);
+
+  const voltar = () => {
+    if (si > 0) setSi(si - 1);
+    else if (gi > 0) { setGi(gi - 1); setSi(0); }
+  };
+
+  useEffect(() => {
+    if (story && API_ATIVA) api.verStory(story.id).catch(() => {});
+    const t = setTimeout(avancar, 5000);
+    const esc = (e) => { if (e.key === 'Escape') fechar(); if (e.key === 'ArrowRight') avancar(); if (e.key === 'ArrowLeft') voltar(); };
+    window.addEventListener('keydown', esc);
+    return () => { clearTimeout(t); window.removeEventListener('keydown', esc); };
+  }, [story, avancar, fechar]); // eslint-disable-line
+
+  if (!story) return null;
+
+  return (
+    <div className="story-viewer">
+      <div className="story-barras">
+        {grupo.stories.map((_, i) => <span key={i} className={i < si ? 'cheia' : i === si ? 'ativa' : ''} />)}
+      </div>
+      <div className="story-viewer-head">
+        <Avatar initial={grupo.usuario.avatar_inicial} size={34} />
+        <strong>{grupo.usuario.apelido}</strong>
+        <em>{story.tempo}</em>
+        <button className="app-icon-btn" onClick={fechar} aria-label="Fechar" style={{ marginLeft: 'auto', color: '#fff' }}><Icon name="x" size={22} /></button>
+      </div>
+      <div className="story-conteudo" style={{ background: story.imagem_url ? '#000' : story.cor_fundo }}>
+        {story.imagem_url ? <img src={story.imagem_url} alt="" /> : <p>{story.texto}</p>}
+        {story.imagem_url && story.texto && <div className="story-legenda">{story.texto}</div>}
+      </div>
+      <button className="story-nav esq" onClick={voltar} aria-label="Anterior" />
+      <button className="story-nav dir" onClick={avancar} aria-label="Próximo" />
     </div>
   );
 }

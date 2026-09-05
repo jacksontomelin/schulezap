@@ -187,3 +187,25 @@ CREATE TABLE mensagens (
   updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_mensagens_conversa ON mensagens(conversa_id, created_at);
+
+-- migration 10: stories
+CREATE TABLE stories (
+  id BIGSERIAL PRIMARY KEY,
+  usuario_id BIGINT NOT NULL REFERENCES usuarios(id),
+  imagem_url TEXT,
+  texto VARCHAR(120),
+  cor_fundo VARCHAR DEFAULT '#F7B500',
+  expira_em TIMESTAMP NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_stories_usuario_expira ON stories(usuario_id, expira_em);
+
+CREATE TABLE visualizacoes_story (
+  id BIGSERIAL PRIMARY KEY,
+  story_id BIGINT NOT NULL REFERENCES stories(id),
+  usuario_id BIGINT NOT NULL REFERENCES usuarios(id),
+  created_at TIMESTAMP NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX idx_visualizacoes_story_uniq ON visualizacoes_story(story_id, usuario_id);

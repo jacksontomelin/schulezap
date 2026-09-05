@@ -67,6 +67,12 @@ if conversa.mensagens.empty?
   conversa.mensagens.create!(remetente: bel, texto: "Bora jogar hoje depois da aula?")
 end
 
+# --- stories de exemplo (somem em 24h) ---
+if Story.ativos.empty?
+  bel.stories.create!(texto: "Treino hoje às 18h! ⚽", cor_fundo: "#C62828")
+  lucas.stories.create!(texto: "Servidor novo no ar 🎮", cor_fundo: "#5B8C2A")
+end
+
 puts "Pronto!"
 puts "  Escola: #{escola.nome}"
 puts "  Login aluno:  Marco / 123456"

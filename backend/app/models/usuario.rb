@@ -13,6 +13,7 @@ class Usuario < ApplicationRecord
   has_many :medalhas, class_name: "Medalha", dependent: :destroy
   has_many :resultados_desafio, class_name: "ResultadoDesafio", dependent: :destroy
   has_many :salvamentos, class_name: "Salvamento", dependent: :destroy
+  has_many :stories, class_name: "Story", dependent: :destroy
   has_many :posts_salvos, through: :salvamentos, source: :post
 
   # amizades (seguir)

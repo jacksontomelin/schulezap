@@ -45,7 +45,15 @@ export const api = {
   eu: () => req("/auth/eu"),
 
   // feed
-  feed: (grupoId) => req(grupoId ? `/feed?grupo_id=${grupoId}` : "/feed"),
+  feed: (opts = {}) => {
+    const q = new URLSearchParams();
+    if (opts.grupoId) q.set("grupo_id", opts.grupoId);
+    if (opts.usuarioId) q.set("usuario_id", opts.usuarioId);
+    if (opts.modo) q.set("modo", opts.modo);
+    if (opts.soFotos) { q.set("so_fotos", "1"); if (opts.autorId) q.set("autor_id", opts.autorId); }
+    const qs = q.toString();
+    return req(qs ? `/feed?${qs}` : "/feed");
+  },
   criarPost: (grupo_id, texto, imagem_url) => req("/posts", { method: "POST", body: { grupo_id, texto, imagem_url } }),
   removerPost: (id) => req(`/posts/${id}`, { method: "DELETE" }),
   reagir: (id, tipo) => req(`/posts/${id}/reagir`, { method: "POST", body: { tipo } }),
@@ -62,6 +70,12 @@ export const api = {
   entrarGrupo: (id) => req(`/grupos/${id}/entrar`, { method: "POST" }),
   sairGrupo: (id) => req(`/grupos/${id}/sair`, { method: "POST" }),
   criarGrupo: (nome, icone, cor_tema) => req("/grupos", { method: "POST", body: { nome, icone, cor_tema } }),
+
+  // stories
+  stories: () => req("/stories"),
+  criarStory: (imagem_url, texto, cor_fundo) => req("/stories", { method: "POST", body: { imagem_url, texto, cor_fundo } }),
+  verStory: (id) => req(`/stories/${id}/visto`, { method: "POST" }),
+  apagarStory: (id) => req(`/stories/${id}`, { method: "DELETE" }),
 
   // chat
   conversas: () => req("/conversas"),

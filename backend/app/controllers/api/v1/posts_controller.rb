@@ -9,6 +9,11 @@ module Api
           escopo = base.where(grupo_id: params[:grupo_id])
         elsif params[:usuario_id].present?
           escopo = base.where(usuario_id: params[:usuario_id])
+        elsif params[:so_fotos].present?
+          escopo = base.where(usuario_id: params[:autor_id] || usuario_atual.id).where.not(imagem_url: nil)
+        elsif params[:modo] == "seguindo"
+          ids = usuario_atual.seguindo.pluck(:id) + [usuario_atual.id]
+          escopo = base.where(usuario_id: ids)
         else
           ids = usuario_atual.grupos.pluck(:id)
           escopo = ids.any? ? base.where(grupo_id: ids) : base.joins(:grupo).where(grupos: { escola_id: usuario_atual.escola_id })
