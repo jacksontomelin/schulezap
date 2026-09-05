@@ -33,7 +33,7 @@ module Api
         escola = Escola.find_by(slug: params[:escola_slug]) || Escola.first
         usuario = escola&.usuarios&.find_by("lower(apelido) = ?", params[:apelido].to_s.downcase)
 
-        if usuario&.authenticate(params[:senha])
+        if usuario&.authenticate_senha(params[:senha])
           usuario.update_column(:ultimo_acesso_em, Time.current)
           render json: { token: TokenService.gerar(usuario), usuario: usuario.as_json_publico }
         else
