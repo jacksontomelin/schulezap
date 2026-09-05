@@ -36,6 +36,16 @@ Rails.application.routes.draw do
       get   "usuarios/:id/seguidores", to: "descobrir#seguidores"
       get   "usuarios/:id/seguindo",   to: "descobrir#seguindo"
 
+      # escola: avisos, boletim, agenda
+      get    "avisos",          to: "avisos#index"
+      post   "avisos",          to: "avisos#create"
+      post   "avisos/:id/lido", to: "avisos#lido"
+      delete "avisos/:id",      to: "avisos#destroy"
+      get    "boletim",         to: "boletim#show"
+      post   "boletim/notas",   to: "boletim#lancar"
+      get    "agenda",          to: "agenda#index"
+      post   "agenda",          to: "agenda#create"
+
       # stories
       get    "stories",           to: "stories#index"
       post   "stories",           to: "stories#create"

@@ -246,3 +246,43 @@ CREATE TABLE hashtags_posts (
   id BIGSERIAL PRIMARY KEY, hashtag_id BIGINT NOT NULL REFERENCES hashtags(id),
   post_id BIGINT NOT NULL REFERENCES posts(id));
 CREATE UNIQUE INDEX idx_hashtags_posts_uniq ON hashtags_posts(hashtag_id, post_id);
+
+-- migration 12: escola (avisos, notas, agenda)
+ALTER TABLE usuarios ADD COLUMN turma VARCHAR(20);
+ALTER TABLE usuarios ADD COLUMN periodo VARCHAR(20);
+
+CREATE TABLE avisos (
+  id BIGSERIAL PRIMARY KEY, escola_id BIGINT NOT NULL REFERENCES escolas(id),
+  autor_id BIGINT NOT NULL REFERENCES usuarios(id),
+  titulo VARCHAR NOT NULL, corpo TEXT NOT NULL, categoria VARCHAR DEFAULT 'geral',
+  turma_alvo VARCHAR, fixado BOOLEAN NOT NULL DEFAULT false, evento_em TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT now(), updated_at TIMESTAMP NOT NULL DEFAULT now());
+CREATE INDEX idx_avisos_escola ON avisos(escola_id, created_at);
+
+CREATE TABLE leituras_aviso (
+  id BIGSERIAL PRIMARY KEY, aviso_id BIGINT NOT NULL REFERENCES avisos(id),
+  usuario_id BIGINT NOT NULL REFERENCES usuarios(id),
+  created_at TIMESTAMP NOT NULL DEFAULT now(), updated_at TIMESTAMP NOT NULL DEFAULT now());
+CREATE UNIQUE INDEX idx_leituras_uniq ON leituras_aviso(aviso_id, usuario_id);
+
+CREATE TABLE disciplinas (
+  id BIGSERIAL PRIMARY KEY, escola_id BIGINT NOT NULL REFERENCES escolas(id),
+  nome VARCHAR NOT NULL, icone VARCHAR DEFAULT 'book',
+  created_at TIMESTAMP NOT NULL DEFAULT now(), updated_at TIMESTAMP NOT NULL DEFAULT now());
+CREATE UNIQUE INDEX idx_disciplinas_uniq ON disciplinas(escola_id, nome);
+
+CREATE TABLE notas (
+  id BIGSERIAL PRIMARY KEY, usuario_id BIGINT NOT NULL REFERENCES usuarios(id),
+  disciplina_id BIGINT NOT NULL REFERENCES disciplinas(id),
+  lancada_por_id BIGINT REFERENCES usuarios(id),
+  valor DECIMAL(4,2) NOT NULL, bimestre INTEGER NOT NULL DEFAULT 1, ano_letivo VARCHAR NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT now(), updated_at TIMESTAMP NOT NULL DEFAULT now());
+CREATE UNIQUE INDEX idx_notas_uniq ON notas(usuario_id, disciplina_id, bimestre, ano_letivo);
+
+CREATE TABLE agendas (
+  id BIGSERIAL PRIMARY KEY, escola_id BIGINT NOT NULL REFERENCES escolas(id),
+  disciplina_id BIGINT REFERENCES disciplinas(id),
+  titulo VARCHAR NOT NULL, descricao TEXT, turma_alvo VARCHAR,
+  tipo VARCHAR DEFAULT 'tarefa', data DATE NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT now(), updated_at TIMESTAMP NOT NULL DEFAULT now());
+CREATE INDEX idx_agendas_data ON agendas(escola_id, data);
