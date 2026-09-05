@@ -1,48 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Icon from '../components/Icons';
+import { Avatar, Tile, Pill, Wordmark } from '../components/UI';
 import './AppShell.css';
 
-const C = {
-  gold: '#F7B500', goldDeep: '#E89B00', goldSoft: '#FCD34D',
-  red: '#C62828', redDeep: '#8E1B1B', redSoft: '#F8D7D3',
-  blue: '#2E86C1', cream: '#FFF8E7', ink: '#3A2A0C', inkSoft: '#8A7A55', line: '#F0DFA8',
-};
-
-const AVATARS = {
-  MA: { bg: '#C62828', fg: '#fff' }, LU: { bg: '#2E86C1', fg: '#fff' },
-  BE: { bg: '#E89B00', fg: '#3A2A0C' }, TH: { bg: '#5B8C2A', fg: '#fff' },
-  HE: { bg: '#8E44AD', fg: '#fff' }, PA: { bg: '#2E86C1', fg: '#fff' },
-};
-function Avatar({ id, size = 40, emoji }) {
-  const a = AVATARS[id] || { bg: C.goldDeep, fg: '#fff' };
-  return (
-    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-      <div style={{ width: size, height: size, borderRadius: '50%', background: a.bg, color: a.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: size * 0.36, boxShadow: 'inset 0 2px 4px rgba(255,255,255,.35), 0 1px 3px rgba(0,0,0,.15)' }}>{id}</div>
-      {emoji && <div style={{ position: 'absolute', bottom: -2, right: -2, fontSize: size * 0.38, filter: 'drop-shadow(0 1px 1px rgba(0,0,0,.2))' }}>{emoji}</div>}
-    </div>
-  );
-}
-
 const SEED_POSTS = [
-  { id: 3, who: 'BE', name: 'Bel', group: 'Grupo do Futebol', time: 'há 20 min', text: 'Quem acertar o placar do jogo de sábado ganha figurinha rara 🏆 comenta aí!', likes: 12, liked: false, comments: 7, badge: 'craque da semana' },
-  { id: 2, who: 'LU', name: 'Lucas', group: 'Turma 6ºB', time: 'há 5 min', text: 'Alguém pra jogar depois da aula hoje? Montei um servidor novo 👾', likes: 8, liked: false, comments: 3, photo: true },
-  { id: 1, who: 'TH', name: 'Théo', group: 'Clube de Alemão', time: 'há 1 h', text: 'Aprendi que "Freunde" é amigos em alemão. Combina com a gente 😄', likes: 5, liked: false, comments: 2 },
+  { id: 3, initial: 'B', name: 'Bel',   group: 'Grupo do Futebol', time: '20 min', text: 'Quem acertar o placar do jogo de sábado leva a figurinha rara. Comenta aí.', likes: 12, liked: false, comments: 7, badge: 'craque' },
+  { id: 2, initial: 'L', name: 'Lucas', group: 'Turma 6ºB',        time: '5 min',  text: 'Servidor novo no ar. Quem tá dentro hoje depois da aula?', likes: 8, liked: false, comments: 3, photo: true },
+  { id: 1, initial: 'T', name: 'Théo',  group: 'Clube de Alemão',  time: '1 h',    text: 'Descobri que "Freunde" é amigos em alemão. Combina com a gente.', likes: 5, liked: false, comments: 2 },
 ];
 
 const GROUPS = [
-  { name: 'Turma 6ºB', emoji: '🏫', members: 24, color: C.red, joined: true },
-  { name: 'Grupo do Futebol', emoji: '⚽', members: 18, color: C.blue, joined: true },
-  { name: 'Cantinho dos Games', emoji: '🎮', members: 31, color: '#5B8C2A', joined: false },
-  { name: 'Clube de Alemão', emoji: '🇩🇪', members: 12, color: C.goldDeep, joined: false },
-  { name: 'Desenho e Arte', emoji: '🎨', members: 15, color: '#8E44AD', joined: false },
+  { name: 'Turma 6ºB',          icon: 'school',   tone: 'red',   members: 24, joined: true },
+  { name: 'Grupo do Futebol',   icon: 'ball',     tone: 'blue',  members: 18, joined: true },
+  { name: 'Cantinho dos Games', icon: 'gamepad',  tone: 'green', members: 31, joined: false },
+  { name: 'Clube de Alemão',    icon: 'language', tone: 'gold',  members: 12, joined: false },
+  { name: 'Desenho e Arte',     icon: 'palette',  tone: 'red',   members: 15, joined: false },
 ];
 
 const QUIZ = [
   { q: 'Pomerode é conhecida como a cidade mais ___ do Brasil.', a: ['Alemã', 'Italiana', 'Fria'], correct: 0 },
   { q: 'Como se diz "amigos" em alemão?', a: ['Kinder', 'Freunde', 'Schule'], correct: 1 },
   { q: '"Schule" significa o quê?', a: ['Casa', 'Escola', 'Festa'], correct: 1 },
-  { q: 'As casinhas típicas de Pomerode são no estilo:', a: ['Enxaimel', 'Colonial', 'Moderno'], correct: 0 },
+  { q: 'As casas típicas de Pomerode são no estilo:', a: ['Enxaimel', 'Colonial', 'Moderno'], correct: 0 },
 ];
+
+const STATUS = ['gamepad', 'ball', 'rocket', 'palette', 'book', 'flame', 'star', 'language'];
 
 export default function AppShell() {
   const nav = useNavigate();
@@ -51,184 +34,175 @@ export default function AppShell() {
   const [posts, setPosts] = useState(SEED_POSTS);
   const [draft, setDraft] = useState('');
   const [groups, setGroups] = useState(GROUPS);
-  const [statusEmoji, setStatusEmoji] = useState('🎮');
-  const [code, setCode] = useState('');
-  const [codeErr, setCodeErr] = useState(false);
+  const [status, setStatus] = useState('gamepad');
   const [toast, setToast] = useState(null);
 
   const showToast = (t) => { setToast(t); setTimeout(() => setToast(null), 1800); };
   const like = (id) => setPosts(p => p.map(x => x.id === id ? { ...x, liked: !x.liked, likes: x.likes + (x.liked ? -1 : 1) } : x));
   const publish = () => {
     if (!draft.trim()) return;
-    setPosts(p => [{ id: Date.now(), who: 'MA', name: 'Marco', group: 'Turma 6ºB', time: 'agora', text: draft.trim(), likes: 0, liked: false, comments: 0 }, ...p]);
-    setDraft(''); showToast('Publicado no mural! 🎉');
+    setPosts(p => [{ id: Date.now(), initial: 'M', name: 'Marco', group: 'Turma 6ºB', time: 'agora', text: draft.trim(), likes: 0, liked: false, comments: 0 }, ...p]);
+    setDraft(''); showToast('Publicado no mural');
   };
   const toggleGroup = (name) => setGroups(g => g.map(x => x.name === name ? { ...x, joined: !x.joined, members: x.members + (x.joined ? -1 : 1) } : x));
 
-  if (screen === 'login') {
-    return (
-      <div className="sz-login-bg">
-        <div className="sz-login-card">
-          <button onClick={() => nav('/')} className="sz-back-btn">← Voltar</button>
-          <div className="sz-login-logo-wrap">
-            <img src="/logo.png" alt="SchuleZap" className="sz-login-logo" />
-          </div>
-          <h1 className="sz-login-title"><span style={{ color: C.ink }}>Schule</span><span style={{ color: C.red }}>Zap</span></h1>
-          <p className="sz-login-sub">Rede Social Escolar de Pomerode, SC</p>
-          <p className="sz-login-subsub">Nossa Pequena Alemanha.</p>
-
-          <div className="sz-login-form">
-            <p className="sz-login-label">Código de convite da turma</p>
-            <input
-              value={code} onChange={e => { setCode(e.target.value); setCodeErr(false); }}
-              placeholder="Ex.: 6B-2026"
-              className={`sz-login-input ${codeErr ? 'sz-login-input--err' : ''}`}
-            />
-            {codeErr && <p className="sz-login-err">Digite o código de convite pra entrar.</p>}
-            <button className="btn-primary sz-login-btn" onClick={() => code.trim() ? setScreen('app') : setCodeErr(true)}>
-              Entrar
-            </button>
-            <button className="btn-gold sz-login-btn" style={{ marginTop: 10 }} onClick={() => setScreen('app')}>
-              Entrar como Marco (demo) →
-            </button>
-          </div>
-          <p className="sz-login-notice">🔒 Rede fechada · Só por convite · Feita pra Pomerode, SC</p>
-          <p className="sz-login-credit">Criado por <strong>Thiago Tomelin</strong></p>
-        </div>
-      </div>
-    );
-  }
+  if (screen === 'login') return <Login onEnter={() => setScreen('app')} onBack={() => nav('/')} />;
 
   return (
-    <div className="sz-app-bg">
-      <div className="sz-app-frame">
-        {/* TOPBAR */}
-        <div className="sz-topbar">
-          <div className="sz-topbar-logo">
-            <img src="/logo.png" alt="SchuleZap" className="sz-topbar-img" />
-            <span className="sz-topbar-name"><span style={{ color: C.ink }}>Schule</span><span style={{ color: C.red }}>Zap</span></span>
+    <div className="app-bg">
+      <div className="app">
+        <header className="app-top">
+          <div className="app-top-brand">
+            <img src="/logo.png" alt="" className="app-top-logo" />
+            <Wordmark size={21} />
           </div>
-          <div className="sz-topbar-icons">
-            <span style={{ position: 'relative' }}>🔔<span className="sz-notif-dot" /></span>
-            <span>💬</span>
+          <div className="app-top-icons">
+            <button className="app-icon-btn" aria-label="Notificações"><Icon name="bell" size={22} /><span className="app-dot" /></button>
+            <button className="app-icon-btn" aria-label="Mensagens"><Icon name="chat" size={22} /></button>
           </div>
-        </div>
+        </header>
 
-        {/* SCREEN */}
-        <div className="sz-screen">
-          {tab === 'feed'    && <Feed posts={posts} draft={draft} setDraft={setDraft} publish={publish} like={like} statusEmoji={statusEmoji} />}
-          {tab === 'grupos'  && <Grupos groups={groups} toggle={toggleGroup} showToast={showToast} />}
-          {tab === 'jogos'   && <Jogos showToast={showToast} />}
-          {tab === 'perfil'  && <Perfil posts={posts} statusEmoji={statusEmoji} setStatusEmoji={setStatusEmoji} />}
-        </div>
+        <main className="app-screen">
+          {tab === 'feed'   && <Feed posts={posts} draft={draft} setDraft={setDraft} publish={publish} like={like} status={status} />}
+          {tab === 'grupos' && <Grupos groups={groups} toggle={toggleGroup} showToast={showToast} />}
+          {tab === 'jogos'  && <Jogos showToast={showToast} />}
+          {tab === 'perfil' && <Perfil posts={posts} status={status} setStatus={setStatus} onLogout={() => setScreen('login')} />}
+        </main>
 
-        {/* BOTTOM NAV */}
-        <div className="sz-bottom-nav">
-          {[['feed','🏠','Mural'],['grupos','👥','Grupos'],['jogos','🎮','Jogos'],['perfil','🙂','Perfil']].map(([id,ic,lb]) => (
-            <button key={id} onClick={() => setTab(id)} className={`sz-nav-btn ${tab === id ? 'sz-nav-btn--active' : ''}`}>
-              <span className="sz-nav-icon">{ic}</span>
-              <span className="sz-nav-label">{lb}</span>
+        <nav className="app-nav">
+          {[['feed', 'home', 'Mural'], ['grupos', 'users', 'Grupos'], ['jogos', 'gamepad', 'Desafios'], ['perfil', 'user', 'Perfil']].map(([id, ic, lb]) => (
+            <button key={id} onClick={() => setTab(id)} className={`app-nav-btn ${tab === id ? 'is-active' : ''}`}>
+              <Icon name={ic} size={22} stroke={tab === id ? 2.5 : 2} />
+              <span>{lb}</span>
             </button>
           ))}
-        </div>
-      </div>
+        </nav>
 
-      {toast && <div className="sz-toast">{toast}</div>}
+        {toast && <div className="app-toast"><Icon name="check" size={16} stroke={3} />{toast}</div>}
+      </div>
     </div>
   );
 }
 
-/* =================== FEED =================== */
-function Feed({ posts, draft, setDraft, publish, like, statusEmoji }) {
-  const stories = [['LU','Lucas','🎮'],['BE','Bel','⚽'],['TH','Théo','🚀'],['HE','Helena','🎨']];
+/* ---------------- LOGIN ---------------- */
+function Login({ onEnter, onBack }) {
+  const [code, setCode] = useState('');
+  const [err, setErr] = useState(false);
+  const submit = (e) => { e.preventDefault(); if (code.trim()) onEnter(); else setErr(true); };
+  return (
+    <div className="login fachwerk">
+      <button className="login-back" onClick={onBack}><Icon name="arrowLeft" size={18} /> Voltar</button>
+      <div className="login-card">
+        <img src="/logo.png" alt="SchuleZap" className="login-logo" />
+        <Wordmark size={34} />
+        <p className="login-sub">Rede Social Escolar de Pomerode, SC</p>
+        <p className="login-tag">Nossa Pequena Alemanha.</p>
+
+        <form className="login-form" onSubmit={submit}>
+          <label className="login-label" htmlFor="code">Código de convite</label>
+          <input id="code" className={`input ${err ? 'input--err' : ''}`} value={code} onChange={e => { setCode(e.target.value); setErr(false); }} placeholder="6B-2026" autoComplete="off" style={{ textAlign: 'center', letterSpacing: '.08em' }} />
+          {err && <p className="login-err">Digite o código que a escola te deu.</p>}
+          <button type="submit" className="btn btn-red btn-block" style={{ marginTop: 12 }}><Icon name="ticket" size={18} /> Entrar</button>
+          <button type="button" className="btn btn-ghost btn-block" style={{ marginTop: 10 }} onClick={onEnter}>Ver a demo como Marco</button>
+        </form>
+
+        <p className="login-notice"><Icon name="lock" size={14} /> Rede fechada. Só entra quem tem convite da escola.</p>
+        <p className="login-credit">Criado por <strong>Thiago Tomelin</strong></p>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- FEED ---------------- */
+function Feed({ posts, draft, setDraft, publish, like, status }) {
   return (
     <div>
-      <div className="sz-stories">
-        <div className="sz-story-item sz-story-add">
-          <div className="sz-story-ring sz-story-ring--dashed"><span style={{ fontSize: 22, color: C.goldDeep }}>＋</span></div>
-          <span className="sz-story-name">Status</span>
+      <div className="stories">
+        <div className="story">
+          <div className="story-add"><Icon name="plus" size={18} stroke={2.5} /></div>
+          <span>Você</span>
         </div>
-        {stories.map(([id,nm,em]) => (
-          <div key={nm} className="sz-story-item">
-            <div className="sz-story-ring"><Avatar id={id} size={44} emoji={em} /></div>
-            <span className="sz-story-name">{nm}</span>
-          </div>
+        {[['L', 'Lucas'], ['B', 'Bel'], ['T', 'Théo'], ['H', 'Helena'], ['P', 'Pedro']].map(([i, n]) => (
+          <div key={n} className="story"><Avatar initial={i} size={46} ring /><span>{n}</span></div>
         ))}
       </div>
 
-      <div className="sz-composer">
-        <Avatar id="MA" size={38} emoji={statusEmoji} />
-        <div style={{ flex: 1 }}>
-          <textarea value={draft} onChange={e => setDraft(e.target.value)} placeholder="No que você tá pensando, Marco?" rows={2} className="sz-composer-input" />
-          <div className="sz-composer-actions">
-            <div style={{ display: 'flex', gap: 10, fontSize: 20 }}><span>📷</span><span>😀</span><span>🎮</span></div>
-            <button className="btn-primary sz-post-btn" onClick={publish}>Postar</button>
+      <div className="composer">
+        <Avatar initial="M" size={40} badgeIcon={status} />
+        <div className="composer-body">
+          <textarea className="composer-input" rows={2} value={draft} onChange={e => setDraft(e.target.value)} placeholder="No que você tá pensando, Marco?" />
+          <div className="composer-actions">
+            <div className="composer-tools">
+              <button className="app-icon-btn" aria-label="Foto"><Icon name="camera" size={20} /></button>
+              <button className="app-icon-btn" aria-label="Reação"><Icon name="smile" size={20} /></button>
+            </div>
+            <button className="btn btn-red btn-sm" onClick={publish}>Postar <Icon name="send" size={15} /></button>
           </div>
         </div>
       </div>
 
       {posts.map(p => (
-        <div key={p.id} className="sz-post">
-          <div className="sz-post-header">
-            <Avatar id={p.who} size={40} />
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                <span style={{ fontWeight: 800, fontSize: 14, color: C.ink }}>{p.name}</span>
-                {p.badge && <span className="sz-badge">{p.badge}</span>}
-              </div>
-              <span className="sz-post-meta">{p.group} · {p.time}</span>
+        <article key={p.id} className="post">
+          <div className="post-head">
+            <Avatar initial={p.initial} size={42} />
+            <div className="post-who">
+              <strong>{p.name}{p.badge && <span className="post-badge"><Icon name="medal" size={11} stroke={2.5} />{p.badge}</span>}</strong>
+              <span>{p.group} · {p.time}</span>
             </div>
+            <button className="app-icon-btn" aria-label="Mais"><Icon name="dots" size={20} /></button>
           </div>
-          <p className="sz-post-text">{p.text}</p>
-          {p.photo && <div className="sz-post-photo">🖼️</div>}
-          <div className="sz-post-actions">
-            <button onClick={() => like(p.id)} className={`sz-reaction-btn ${p.liked ? 'sz-reaction-btn--liked' : ''}`}>{p.liked ? '❤️' : '🤍'} {p.likes}</button>
-            <button className="sz-reaction-btn">💬 {p.comments}</button>
-            <button className="sz-reaction-btn">😄 reagir</button>
+          <p className="post-text">{p.text}</p>
+          {p.photo && <div className="post-photo"><Icon name="photo" size={28} /></div>}
+          <div className="post-actions">
+            <Pill icon="heart" active={p.liked} onClick={() => like(p.id)}>{p.likes}</Pill>
+            <Pill icon="comment">{p.comments}</Pill>
+            <Pill icon="send" />
           </div>
-        </div>
+        </article>
       ))}
-      <div className="sz-feed-end">Você viu tudo por aqui 🎉</div>
+      <p className="feed-end">Você viu tudo por aqui.</p>
     </div>
   );
 }
 
-/* =================== GRUPOS =================== */
+/* ---------------- GRUPOS ---------------- */
 function Grupos({ groups, toggle, showToast }) {
   return (
-    <div className="sz-section-pad">
-      <h2 className="sz-section-title">Grupos</h2>
-      <p className="sz-section-sub">Cantinhos da turma — cada grupo tem seu próprio mural.</p>
+    <div className="pad">
+      <h2 className="h2">Grupos</h2>
+      <p className="sub">Cada grupo tem seu próprio mural.</p>
       {groups.map(g => (
-        <div key={g.name} className="sz-group-card">
-          <div className="sz-group-icon" style={{ background: g.color }}>{g.emoji}</div>
-          <div style={{ flex: 1 }}>
-            <p style={{ margin: 0, fontWeight: 800, fontSize: 15, color: C.ink }}>{g.name}</p>
-            <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: C.inkSoft }}>{g.members} colegas</p>
+        <div key={g.name} className="row-card">
+          <Tile icon={g.icon} tone={g.tone} size={48} radius={14} />
+          <div className="row-card-body">
+            <strong>{g.name}</strong>
+            <span>{g.members} colegas</span>
           </div>
-          <button onClick={() => toggle(g.name)} className={g.joined ? 'btn-gold sz-group-btn' : 'btn-primary sz-group-btn'}>
-            {g.joined ? 'Participando' : 'Entrar'}
+          <button onClick={() => toggle(g.name)} className={`btn btn-sm ${g.joined ? 'btn-ghost' : 'btn-red'}`}>
+            {g.joined ? <><Icon name="check" size={15} stroke={3} /> Dentro</> : 'Entrar'}
           </button>
         </div>
       ))}
-      <button className="btn-gold" style={{ width: '100%', marginTop: 4 }} onClick={() => showToast('Em breve! 🚧')}>＋ Criar grupo</button>
+      <button className="btn btn-gold btn-block" style={{ marginTop: 6 }} onClick={() => showToast('Em breve')}><Icon name="plus" size={18} stroke={2.5} /> Criar grupo</button>
     </div>
   );
 }
 
-/* =================== JOGOS =================== */
+/* ---------------- DESAFIOS ---------------- */
 function Jogos({ showToast }) {
   const [i, setI] = useState(0);
   const [picked, setPicked] = useState(null);
   const [score, setScore] = useState(0);
   const [done, setDone] = useState(false);
 
+  const reset = () => { setI(0); setPicked(null); setScore(0); setDone(false); };
+
   if (done) return (
-    <div className="sz-section-pad" style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 72, marginBottom: 8 }}>{score >= 3 ? '🏆' : '🎉'}</div>
-      <h2 className="sz-section-title">{score} de {QUIZ.length} acertos!</h2>
-      <p className="sz-section-sub">{score >= 3 ? 'Mandou muito bem, craque de Pomerode!' : 'Boa tentativa! Bora de novo?'}</p>
-      <button className="btn-primary" style={{ marginTop: 16 }} onClick={() => { setI(0); setPicked(null); setScore(0); setDone(false); }}>Jogar de novo</button>
+    <div className="pad" style={{ textAlign: 'center', paddingTop: 40 }}>
+      <div className="result-tile"><Icon name={score >= 3 ? 'trophy' : 'sparkles'} size={44} stroke={2} /></div>
+      <h2 className="h2" style={{ marginTop: 18 }}>{score} de {QUIZ.length}</h2>
+      <p className="sub">{score >= 3 ? 'Mandou muito bem, craque de Pomerode.' : 'Boa tentativa. Bora de novo?'}</p>
+      <button className="btn btn-red" style={{ marginTop: 18 }} onClick={reset}><Icon name="refresh" size={18} /> Jogar de novo</button>
     </div>
   );
 
@@ -236,100 +210,82 @@ function Jogos({ showToast }) {
   const next = () => {
     if (picked === null) return;
     if (picked === q.correct) setScore(s => s + 1);
-    if (i + 1 >= QUIZ.length) setDone(true);
-    else { setI(i + 1); setPicked(null); }
+    if (i + 1 >= QUIZ.length) setDone(true); else { setI(i + 1); setPicked(null); }
   };
 
   return (
-    <div className="sz-section-pad">
-      <h2 className="sz-section-title">Jogos e desafios</h2>
-      <div className="sz-quiz-card">
-        <div className="sz-quiz-header">
-          <span style={{ fontWeight: 800, color: C.redDeep, fontSize: 13 }}>🧠 Quiz de Pomerode</span>
-          <span className="sz-quiz-prog">{i + 1}/{QUIZ.length}</span>
+    <div className="pad">
+      <h2 className="h2">Desafios</h2>
+      <p className="sub">Sobe no ranking da turma.</p>
+
+      <div className="quiz fachwerk">
+        <div className="quiz-head">
+          <span className="quiz-title"><Icon name="bulb" size={16} stroke={2.5} /> Quiz de Pomerode</span>
+          <span className="quiz-prog">{i + 1}/{QUIZ.length}</span>
         </div>
-        <p className="sz-quiz-q">{q.q}</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <p className="quiz-q">{q.q}</p>
+        <div className="quiz-opts">
           {q.a.map((opt, idx) => {
-            const isPicked = picked === idx;
-            const reveal = picked !== null;
-            const correct = idx === q.correct;
-            let cls = 'sz-quiz-opt';
-            if (reveal && correct) cls += ' sz-quiz-opt--correct';
-            else if (reveal && isPicked) cls += ' sz-quiz-opt--wrong';
+            const reveal = picked !== null, correct = idx === q.correct, mine = picked === idx;
+            const cls = `quiz-opt ${reveal && correct ? 'is-correct' : ''} ${reveal && mine && !correct ? 'is-wrong' : ''}`;
             return (
-              <button key={idx} onClick={() => picked === null && setPicked(idx)} className={cls}>
+              <button key={idx} className={cls} onClick={() => picked === null && setPicked(idx)}>
                 {opt}
-                {reveal && correct && <span>✅</span>}
-                {reveal && isPicked && !correct && <span>❌</span>}
+                {reveal && correct && <Icon name="check" size={18} stroke={3} />}
+                {reveal && mine && !correct && <Icon name="x" size={18} stroke={3} />}
               </button>
             );
           })}
         </div>
-        <button className={`btn-primary sz-quiz-next ${picked === null ? 'sz-quiz-next--disabled' : ''}`} onClick={next} disabled={picked === null}>
-          {i + 1 >= QUIZ.length ? 'Ver resultado' : 'Próxima →'}
+        <button className="btn btn-red btn-block" style={{ marginTop: 14 }} onClick={next} disabled={picked === null}>
+          {i + 1 >= QUIZ.length ? 'Ver resultado' : 'Próxima'} <Icon name="arrowRight" size={18} />
         </button>
       </div>
 
-      <p className="sz-games-label">Mais pra brincar</p>
-      {[['⚽','Adivinha o placar','Chute o resultado do jogo de sábado'],['🎨','Desenho do dia','Um tema novo todo dia pra desenhar'],['🔤','Palavra em alemão','Aprenda e desafie um amigo']].map(([em,t,d]) => (
-        <div key={t} className="sz-game-item" onClick={() => showToast('Em breve! 🚧')}>
-          <span style={{ fontSize: 26 }}>{em}</span>
-          <div style={{ flex: 1 }}>
-            <p style={{ margin: 0, fontWeight: 800, fontSize: 14, color: C.ink }}>{t}</p>
-            <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: C.inkSoft }}>{d}</p>
-          </div>
-          <span style={{ color: C.goldDeep, fontWeight: 800 }}>→</span>
-        </div>
+      <p className="label">Mais pra jogar</p>
+      {[['ball', 'blue', 'Adivinha o placar', 'Chute o resultado do jogo de sábado'], ['palette', 'red', 'Desenho do dia', 'Um tema novo por dia'], ['language', 'gold', 'Palavra em alemão', 'Aprenda e desafie um amigo']].map(([ic, tone, t, d]) => (
+        <button key={t} className="row-card row-card--btn" onClick={() => showToast('Em breve')}>
+          <Tile icon={ic} tone={tone} size={44} />
+          <div className="row-card-body"><strong>{t}</strong><span>{d}</span></div>
+          <Icon name="chevronRight" size={20} style={{ color: 'var(--ink-3)' }} />
+        </button>
       ))}
     </div>
   );
 }
 
-/* =================== PERFIL =================== */
-function Perfil({ posts, statusEmoji, setStatusEmoji }) {
-  const mine = posts.filter(p => p.who === 'MA');
-  const totalLikes = mine.reduce((s, p) => s + p.likes, 0);
-  const emojis = ['🎮','⚽','🚀','😎','🎨','🇩🇪','📚','😄'];
-  const badges = [['🏅','Craque da semana'],['🎯','Acertou o quiz'],['🌟','Primeiro post'],['🤝','5 amigos']];
-
+/* ---------------- PERFIL ---------------- */
+function Perfil({ posts, status, setStatus, onLogout }) {
+  const mine = posts.filter(p => p.initial === 'M');
+  const likes = mine.reduce((s, p) => s + p.likes, 0);
+  const badges = [['medal', 'gold', 'Craque da semana'], ['flame', 'red', '7 dias seguidos'], ['bulb', 'blue', 'Quiz 4/4'], ['users', 'green', '5 amigos']];
   return (
     <div>
-      <div className="sz-profile-hero">
-        <div className="sz-profile-avatar-wrap">
-          <Avatar id="MA" size={86} emoji={statusEmoji} />
-        </div>
-        <h2 className="sz-profile-name">Marco 🎮</h2>
-        <p className="sz-profile-school">Turma 6ºB · Escola Doutor Blumenau · Pomerode, SC</p>
-        <p className="sz-profile-credit">Criado por <strong>Thiago Tomelin</strong></p>
+      <div className="profile-hero fachwerk">
+        <div className="profile-avatar"><Avatar initial="M" size={88} badgeIcon={status} /></div>
+        <h2 className="h2" style={{ marginTop: 10 }}>Marco</h2>
+        <p className="profile-school">6ºB · Escola Doutor Blumenau · Pomerode</p>
       </div>
-
-      <div className="sz-stats-row">
-        {[[mine.length,'Posts'],[totalLikes,'Curtidas'],[12,'Amigos']].map(([n,l]) => (
-          <div key={l} className="sz-stat-card">
-            <div className="sz-stat-num">{n}</div>
-            <div className="sz-stat-label">{l}</div>
-          </div>
+      <div className="stats">
+        {[[mine.length, 'Posts'], [likes, 'Curtidas'], ['#3', 'Ranking']].map(([n, l]) => (
+          <div key={l} className="stat"><strong>{n}</strong><span>{l}</span></div>
         ))}
       </div>
-
-      <div className="sz-section-pad">
-        <p className="sz-games-label">Status do dia</p>
-        <div className="sz-emoji-grid">
-          {emojis.map(e => (
-            <button key={e} onClick={() => setStatusEmoji(e)} className={`sz-emoji-btn ${statusEmoji === e ? 'sz-emoji-btn--active' : ''}`}>{e}</button>
+      <div className="pad">
+        <p className="label">Status do dia</p>
+        <div className="status-grid">
+          {STATUS.map(s => (
+            <button key={s} onClick={() => setStatus(s)} className={`status-btn ${status === s ? 'is-active' : ''}`} aria-label={s}><Icon name={s} size={22} /></button>
           ))}
         </div>
-
-        <p className="sz-games-label" style={{ marginTop: 20 }}>Medalhas 🏆</p>
-        <div className="sz-badges-grid">
-          {badges.map(([em,t]) => (
-            <div key={t} className="sz-badge-card">
-              <span style={{ fontSize: 22 }}>{em}</span>
-              <span style={{ fontWeight: 800, fontSize: 13, color: C.ink }}>{t}</span>
-            </div>
+        <p className="label" style={{ marginTop: 22 }}>Conquistas</p>
+        <div className="badges">
+          {badges.map(([ic, tone, t]) => (
+            <div key={t} className="badge-card"><Tile icon={ic} tone={tone} size={36} radius={10} /><span>{t}</span></div>
           ))}
         </div>
+        <button className="btn btn-ghost btn-block" style={{ marginTop: 22 }} onClick={onLogout}><Icon name="logout" size={18} /> Sair</button>
+        <p className="profile-credit">Criado por <strong>Thiago Tomelin</strong></p>
       </div>
     </div>
   );
