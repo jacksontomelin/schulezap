@@ -101,31 +101,33 @@ export default function AppShell() {
           </div>
         </header>
 
-        {painel === 'notif' && <Notificacoes fechar={() => setPainel(null)} />}
+        <div className="app-body">
+          <nav className="app-nav">
+            {[
+              ['feed', 'home', 'Mural'],
+              ['grupos', 'users', 'Grupos'],
+              ['jogos', 'gamepad', 'Desafios'],
+              ['ranking', 'trophy', 'Ranking'],
+              ...(ehModerador ? [['moderar', 'shield', 'Moderar']] : []),
+              ['perfil', 'user', 'Perfil'],
+            ].map(([id, ic, lb]) => (
+              <button key={id} onClick={() => { setTab(id); setPainel(null); }} className={`app-nav-btn ${tab === id ? 'is-active' : ''}`}>
+                <Icon name={ic} size={22} stroke={tab === id ? 2.5 : 2} />
+                <span>{lb}</span>
+              </button>
+            ))}
+          </nav>
 
-        <main className="app-screen">
-          {tab === 'feed' && <Feed usuario={usuario} showToast={showToast} temaInicial={postarTema} limparTema={() => setPostarTema('')} />}
-          {tab === 'grupos' && <Grupos showToast={showToast} />}
-          {tab === 'jogos' && <Jogos showToast={showToast} usuario={usuario} setUsuario={setUsuario} irPostar={irPostar} />}
-          {tab === 'ranking' && <Ranking usuario={usuario} />}
-          {tab === 'perfil' && <Perfil usuario={usuario} setUsuario={setUsuario} onLogout={sair} />}
-          {tab === 'moderar' && ehModerador && <Moderar showToast={showToast} />}
-        </main>
-
-        <nav className="app-nav">
-          {[
-            ['feed', 'home', 'Mural'],
-            ['grupos', 'users', 'Grupos'],
-            ['jogos', 'gamepad', 'Desafios'],
-            ...(ehModerador ? [['moderar', 'shield', 'Moderar']] : []),
-            ['perfil', 'user', 'Perfil'],
-          ].map(([id, ic, lb]) => (
-            <button key={id} onClick={() => { setTab(id); setPainel(null); }} className={`app-nav-btn ${tab === id ? 'is-active' : ''}`}>
-              <Icon name={ic} size={22} stroke={tab === id ? 2.5 : 2} />
-              <span>{lb}</span>
-            </button>
-          ))}
-        </nav>
+          <main className="app-screen">
+            {painel === 'notif' && <Notificacoes fechar={() => setPainel(null)} />}
+            {tab === 'feed' && <Feed usuario={usuario} showToast={showToast} temaInicial={postarTema} limparTema={() => setPostarTema('')} />}
+            {tab === 'grupos' && <Grupos showToast={showToast} />}
+            {tab === 'jogos' && <Jogos showToast={showToast} usuario={usuario} setUsuario={setUsuario} irPostar={irPostar} />}
+            {tab === 'ranking' && <Ranking usuario={usuario} />}
+            {tab === 'perfil' && <Perfil usuario={usuario} setUsuario={setUsuario} onLogout={sair} />}
+            {tab === 'moderar' && ehModerador && <Moderar showToast={showToast} />}
+          </main>
+        </div>
 
         {toast && <div className="app-toast"><Icon name="check" size={16} stroke={3} />{toast}</div>}
       </div>
