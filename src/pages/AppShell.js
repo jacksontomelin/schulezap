@@ -103,6 +103,7 @@ export default function AppShell() {
   const [postarTema, setPostarTema] = useState('');
   const [perfilId, setPerfilId] = useState(null); // ver perfil de outro usuário
   const [conversaId, setConversaId] = useState(null); // chat aberto
+  const [menuMais, setMenuMais] = useState(false);
 
   const showToast = useCallback((t) => { setToast(t); setTimeout(() => setToast(null), 2000); }, []);
   const abrirPerfil = useCallback((id) => { setPerfilId(id); setTab('perfil-outro'); setPainel(null); }, []);
@@ -149,7 +150,8 @@ export default function AppShell() {
         </header>
 
         <div className="app-body">
-          <nav className="app-nav">
+          {/* menu completo — desktop */}
+          <nav className="app-nav app-nav--desktop">
             {[
               ['feed', 'home', 'Mural'],
               ['grupos', 'users', 'Grupos'],
@@ -192,6 +194,54 @@ export default function AppShell() {
             <WidgetAgenda />
           </aside>
         </div>
+
+        {/* barra estilo Instagram — celular */}
+        <nav className="tabbar">
+          <button className={`tabbar-btn ${tab === 'feed' ? 'is-active' : ''}`} onClick={() => { setTab('feed'); setPainel(null); }} aria-label="Mural">
+            <Icon name="home" size={25} stroke={tab === 'feed' ? 2.6 : 2} />
+          </button>
+          <button className={`tabbar-btn ${tab === 'descobrir' ? 'is-active' : ''}`} onClick={() => { setTab('descobrir'); setPainel(null); }} aria-label="Descobrir">
+            <Icon name="search" size={25} stroke={tab === 'descobrir' ? 2.6 : 2} />
+          </button>
+          <button className="tabbar-postar" onClick={() => { setTab('feed'); setPainel(null); setTimeout(() => document.querySelector('.composer-input')?.focus(), 120); }} aria-label="Publicar">
+            <Icon name="plus" size={26} stroke={3} />
+          </button>
+          <button className={`tabbar-btn ${tab === 'conversas' || tab === 'chat' ? 'is-active' : ''}`} onClick={() => { setTab('conversas'); setPainel(null); }} aria-label="Mensagens">
+            <Icon name="chat" size={25} stroke={tab === 'conversas' ? 2.6 : 2} />
+          </button>
+          <button className={`tabbar-btn ${['perfil', 'avisos', 'boletim', 'grupos', 'jogos', 'ranking', 'moderar'].includes(tab) ? 'is-active' : ''}`} onClick={() => setMenuMais(true)} aria-label="Mais">
+            <Avatar initial={usuario.avatar_inicial} foto={usuario.foto_url} size={26} />
+          </button>
+        </nav>
+
+        {menuMais && (
+          <div className="mais-fundo" onClick={() => setMenuMais(false)}>
+            <div className="mais-folha" onClick={(e) => e.stopPropagation()}>
+              <div className="mais-alca" />
+              <button className="mais-perfil" onClick={() => { setTab('perfil'); setMenuMais(false); }}>
+                <Avatar initial={usuario.avatar_inicial} foto={usuario.foto_url} size={48} badgeIcon={usuario.status_icone} />
+                <div><strong>{usuario.apelido}</strong><span>{usuario.turma ? `${usuario.turma} · ` : ''}Ver meu perfil</span></div>
+                <Icon name="chevronRight" size={20} style={{ color: 'var(--ink-3)' }} />
+              </button>
+              <div className="mais-grade">
+                {[
+                  ['avisos', 'bell', 'Avisos'],
+                  ['boletim', 'book', 'Boletim'],
+                  ['grupos', 'users', 'Grupos'],
+                  ['jogos', 'gamepad', 'Desafios'],
+                  ['ranking', 'trophy', 'Ranking'],
+                  ...(ehModerador ? [['moderar', 'shield', 'Moderar']] : []),
+                ].map(([id, ic, lb]) => (
+                  <button key={id} className={`mais-item ${tab === id ? 'is-on' : ''}`} onClick={() => { setTab(id); setMenuMais(false); setPainel(null); }}>
+                    <Tile icon={ic} tone={tab === id ? 'solidRed' : 'gold'} size={44} radius={14} />
+                    <span>{lb}</span>
+                  </button>
+                ))}
+              </div>
+              <button className="btn btn-ghost btn-block" onClick={() => { setMenuMais(false); sair(); }}><Icon name="logout" size={18} /> Sair</button>
+            </div>
+          </div>
+        )}
 
         {toast && <div className="app-toast"><Icon name="check" size={16} stroke={3} />{toast}</div>}
       </div>
