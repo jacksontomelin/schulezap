@@ -106,3 +106,31 @@
   .app-bg { padding: 0; }
   .app { width: 100%; min-height: 100vh; border-radius: 0; box-shadow: none; }
 }
+
+/* ---------- LOGIN: abas ---------- */
+.login-tabs { display: flex; gap: 6px; background: var(--cream); border: 2px solid var(--line); border-radius: 12px; padding: 4px; margin-bottom: 18px; }
+.login-tabs button { flex: 1; background: none; border: none; padding: 9px; border-radius: 9px; font-family: var(--font); font-weight: 800; font-size: 13px; color: var(--ink-3); cursor: pointer; transition: background .12s, color .12s; }
+.login-tabs button.is-on { background: #fff; color: var(--red); box-shadow: 0 1px 3px rgba(43,29,6,.1); }
+
+/* ---------- MODERAR ---------- */
+.mod-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px; }
+.mod-stat { display: flex; align-items: center; gap: 10px; background: #fff; border: 2px solid var(--line); border-radius: 14px; padding: 12px; }
+.mod-stat > div { display: flex; flex-direction: column; }
+.mod-stat strong { font-size: 20px; font-weight: 900; color: var(--ink); line-height: 1.1; }
+.mod-stat span { font-size: 11.5px; font-weight: 700; color: var(--ink-3); }
+
+.mod-empty { display: flex; align-items: center; justify-content: center; gap: 8px; background: #E4F1DA; color: #2F6B1A; border-radius: 14px; padding: 16px; font-weight: 800; font-size: 14px; }
+
+.mod-denuncia { background: #fff; border: 2px solid var(--red-light); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+.mod-denuncia-txt { font-size: 14px; font-weight: 700; color: var(--ink); font-style: italic; margin-bottom: 4px; }
+.mod-denuncia-meta { font-size: 12px; font-weight: 700; color: var(--ink-3); margin-bottom: 12px; }
+.mod-denuncia-acoes { display: flex; gap: 8px; }
+
+.mod-gerar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+.mod-gerar .input { height: 44px; }
+.mod-convites { display: flex; flex-direction: column; gap: 6px; }
+.mod-convite { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 2px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.mod-convite code { font-family: var(--font-mono, monospace); font-weight: 800; font-size: 14px; color: var(--red); letter-spacing: .04em; }
+.mod-convite span { font-size: 12px; font-weight: 700; color: var(--ink-3); }
+.mod-convite.is-usado { opacity: .6; }
+.mod-convite.is-usado code { color: var(--ink-3); }
