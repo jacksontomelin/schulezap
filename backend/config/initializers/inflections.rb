@@ -4,5 +4,4 @@ ActiveSupport::Inflector.inflections(:en) do |inflect|
   inflect.irregular "denuncia", "denuncias"
   inflect.irregular "comentario", "comentarios"
   inflect.irregular "medalha", "medalhas"
-  inflect.acronym "API"
 end
