@@ -1,4 +1,5 @@
 class Escola < ApplicationRecord
+  self.table_name = "escolas"
   has_many :usuarios, dependent: :destroy
   has_many :grupos, dependent: :destroy
   has_many :convites, dependent: :destroy

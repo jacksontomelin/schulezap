@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+
+echo "→ Aguardando o banco de dados..."
+until pg_isready -d "${DATABASE_URL}" >/dev/null 2>&1; do
+  sleep 1
+done
+
+echo "→ Preparando o banco (create + migrate)..."
+bundle exec rails db:prepare
+
+# roda seeds só na primeira vez (se pedido)
+if [ "${RUN_SEEDS}" = "true" ]; then
+  echo "→ Rodando seeds..."
+  bundle exec rails db:seed
+fi
+
+echo "→ Iniciando o servidor..."
+exec "$@"

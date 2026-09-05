@@ -1,0 +1,6 @@
+.git
+tmp
+log
+db/schema_validado.sql
+*.md
+node_modules

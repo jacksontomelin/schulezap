@@ -1,0 +1,25 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+
+development:
+  <<: *default
+  database: schulezap_development
+  host: <%= ENV.fetch("DB_HOST", "localhost") %>
+  username: <%= ENV.fetch("DB_USER", "postgres") %>
+  password: <%= ENV.fetch("DB_PASSWORD", "") %>
+  port: <%= ENV.fetch("DB_PORT", 5432) %>
+
+test:
+  <<: *default
+  database: schulezap_test
+  host: <%= ENV.fetch("DB_HOST", "localhost") %>
+  username: <%= ENV.fetch("DB_USER", "postgres") %>
+  password: <%= ENV.fetch("DB_PASSWORD", "") %>
+  port: <%= ENV.fetch("DB_PORT", 5432) %>
+
+production:
+  <<: *default
+  # No Coolify, basta setar DATABASE_URL que o Rails usa automaticamente.
+  url: <%= ENV["DATABASE_URL"] %>

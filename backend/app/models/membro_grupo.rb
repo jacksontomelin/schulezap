@@ -1,4 +1,6 @@
 class MembroGrupo < ApplicationRecord
+  self.table_name = "membros_grupo"
+
   belongs_to :grupo
   belongs_to :usuario
 

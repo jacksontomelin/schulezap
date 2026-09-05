@@ -1,4 +1,5 @@
 class Medalha < ApplicationRecord
+  self.table_name = "medalhas"
   belongs_to :usuario
 
   validates :chave, presence: true,

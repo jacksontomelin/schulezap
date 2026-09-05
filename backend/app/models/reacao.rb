@@ -1,4 +1,5 @@
 class Reacao < ApplicationRecord
+  self.table_name = "reacoes"
   belongs_to :post, counter_cache: :reacoes_count
   belongs_to :usuario
 

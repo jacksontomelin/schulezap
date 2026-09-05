@@ -1,4 +1,5 @@
 class Convite < ApplicationRecord
+  self.table_name = "convites"
   belongs_to :escola
   belongs_to :gerado_por, class_name: "Usuario", optional: true
   belongs_to :usado_por, class_name: "Usuario", optional: true

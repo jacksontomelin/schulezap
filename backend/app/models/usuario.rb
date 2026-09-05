@@ -1,15 +1,16 @@
 class Usuario < ApplicationRecord
+  self.table_name = "usuarios"
   # usa bcrypt via 'senha_digest' (has_secure_password aponta pro atributo custom)
   has_secure_password :senha, validations: true
 
   belongs_to :escola
 
-  has_many :membros_grupo, dependent: :destroy
-  has_many :grupos, through: :membros_grupo
+  has_many :membros_grupo, class_name: "MembroGrupo", dependent: :destroy
+  has_many :grupos, through: :membros_grupo, source: :grupo
   has_many :posts, dependent: :destroy
-  has_many :comentarios, dependent: :destroy
-  has_many :reacoes, dependent: :destroy
-  has_many :medalhas, dependent: :destroy
+  has_many :comentarios, class_name: "Comentario", dependent: :destroy
+  has_many :reacoes, class_name: "Reacao", dependent: :destroy
+  has_many :medalhas, class_name: "Medalha", dependent: :destroy
 
   enum :papel, { aluno: 0, responsavel: 1, admin: 2 }, default: :aluno
 
