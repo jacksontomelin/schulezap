@@ -3,36 +3,86 @@ import { useNavigate } from 'react-router-dom';
 import Icon from '../components/Icons';
 import { Avatar, Tile, Pill, Wordmark } from '../components/UI';
 import { api, setToken, clearToken, getToken } from '../api';
+import { FOTOS } from '../demoFotos';
 import './AppShell.css';
 
 const API_ATIVA = Boolean(process.env.REACT_APP_API_URL);
 
 /* ===================== dados demo (sem backend) ===================== */
 const DEMO_POSTS = [
-  { id: 3, autor: { id: 12, avatar_inicial: 'B', apelido: 'Bel' }, grupo: { nome: 'Grupo do Futebol' }, tempo: '20 min', texto: 'Quem acertar o placar do jogo de sábado leva a figurinha rara. Comenta aí.', reacoes: 12, eu_reagi: false, comentarios: 2, badge: 'craque' },
-  { id: 2, autor: { id: 13, avatar_inicial: 'L', apelido: 'Lucas' }, grupo: { nome: 'Turma 6ºB' }, tempo: '5 min', texto: 'Servidor novo no ar. Quem tá dentro hoje depois da aula?', reacoes: 8, eu_reagi: false, comentarios: 0, photo: true },
-  { id: 1, autor: { id: 14, avatar_inicial: 'T', apelido: 'Théo' }, grupo: { nome: 'Clube de Alemão' }, tempo: '1 h', texto: 'Descobri que "Freunde" é amigos em alemão. Combina com a gente.', reacoes: 5, eu_reagi: false, comentarios: 0 },
+  { id: 1, autor: { id: 12, avatar_inicial: 'B', apelido: 'Bel' }, grupo: { nome: 'Grupo do Futebol' }, tempo: '2 h', texto: 'Quem acertar o placar do jogo de sábado leva a figurinha rara! 🏆 Comenta aí o palpite #futebol #turma8a', imagens: [FOTOS.futebol], reacoes: 8, por_tipo: { amei: 3, curtida: 4, uau: 1 }, minha_reacao: null, comentarios: 4, salvo: false, badge: 'craque' },
+  { id: 2, autor: { id: 13, avatar_inicial: 'L', apelido: 'Lucas' }, grupo: { nome: 'Cantinho dos Games' }, tempo: '5 h', texto: 'Servidor novo no ar! Quem tá dentro hoje depois da aula? #games', imagens: [FOTOS.games], reacoes: 4, por_tipo: { amei: 2, curtida: 2 }, minha_reacao: null, comentarios: 2, salvo: false },
+  { id: 3, autor: { id: 16, avatar_inicial: 'H', apelido: 'Helena' }, grupo: { nome: 'Desenho e Arte' }, tempo: '12 h', texto: 'Terminei o desenho da casa enxaimel pro trabalho de artes. O que acharam? 🎨 #enxaimel #arte', imagens: [FOTOS.enxaimel], reacoes: 6, por_tipo: { amei: 3, uau: 2, curtida: 1 }, minha_reacao: null, comentarios: 3, salvo: true },
+  { id: 4, autor: { id: 14, avatar_inicial: 'T', apelido: 'Théo' }, grupo: { nome: 'Clube de Alemão' }, tempo: '8 h', texto: 'Descobri que "Freunde" significa amigos em alemão. Combina com a gente! 🇩🇪 #alemao', reacoes: 4, por_tipo: { amei: 1, curtida: 2, risada: 1 }, minha_reacao: null, comentarios: 1, salvo: false },
+  { id: 5, autor: { id: 18, avatar_inicial: 'L', apelido: 'Larissa' }, grupo: { nome: 'Turma 8º Ano A' }, tempo: '20 h', texto: 'Gente, a prova de matemática caiu tudo que a prof passou na revisão. Vale revisar o caderno! #prova', reacoes: 4, por_tipo: { uau: 1, curtida: 2, amei: 1 }, minha_reacao: null, comentarios: 2, salvo: false },
+  { id: 6, autor: { id: 11, avatar_inicial: 'M', apelido: 'Marco' }, grupo: { nome: 'Turma 8º Ano A' }, tempo: '1 d', texto: 'Foto da nossa turma no passeio de ontem! Foi muito bom 😄 #turma8a', imagens: [FOTOS.turma], reacoes: 6, por_tipo: { amei: 3, curtida: 2, uau: 1 }, minha_reacao: null, comentarios: 2, salvo: false },
+  { id: 7, autor: { id: 12, avatar_inicial: 'B', apelido: 'Bel' }, grupo: { nome: 'Turma 8º Ano A' }, tempo: '1 d', texto: 'As inscrições da Osterfest abriram! Quem vai fazer a oficina de pintar Ostereier? 🥚 #osterfest', imagens: [FOTOS.ovos], reacoes: 4, por_tipo: { amei: 1, uau: 1, curtida: 2 }, minha_reacao: null, comentarios: 1, salvo: false },
+  { id: 8, autor: { id: 17, avatar_inicial: 'J', apelido: 'Julia' }, grupo: { nome: 'Clube de Alemão' }, tempo: '1 d', texto: 'Guten Morgen! Hoje a aula foi sobre as casas enxaimel de Pomerode. Aprendi um monte 🇩🇪', imagens: [FOTOS.sala], reacoes: 3, por_tipo: { amei: 2, curtida: 1 }, minha_reacao: null, comentarios: 0, salvo: false },
+  { id: 9, autor: { id: 15, avatar_inicial: 'P', apelido: 'Pedro' }, grupo: { nome: 'Turma 8º Ano B' }, tempo: '2 d', texto: 'O lanche novo da cantina tá muito bom, recomendo! 🥪 #cantina', imagens: [FOTOS.lanche], reacoes: 3, por_tipo: { risada: 1, amei: 1, curtida: 1 }, minha_reacao: null, comentarios: 1, salvo: false },
+  { id: 10, autor: { id: 16, avatar_inicial: 'H', apelido: 'Helena' }, grupo: { nome: 'Desenho e Arte' }, tempo: '2 d', texto: 'Desenho do dia: tema de hoje era "a rua da sua casa". Ficou assim 🎨 #desenhododia', imagens: [FOTOS.arte], reacoes: 3, por_tipo: { amei: 2, uau: 1 }, minha_reacao: null, comentarios: 1, salvo: false },
 ];
-const DEMO_COMENTARIOS = { 3: [{ id: 1, autor: { avatar_inicial: 'M', apelido: 'Marco' }, texto: '2 a 1 pro nosso time!' }, { id: 2, autor: { avatar_inicial: 'L', apelido: 'Lucas' }, texto: 'Vou de 3 a 0.' }] };
+
+const DEMO_COMENTARIOS = {
+  1: [
+    { id: 1, autor: { id: 11, avatar_inicial: 'M', apelido: 'Marco' }, texto: '2 a 1 pro nosso time! 🔥' },
+    { id: 2, autor: { id: 13, avatar_inicial: 'L', apelido: 'Lucas' }, texto: 'Vou de 3 a 0, esse ano a gente ganha' },
+    { id: 3, autor: { id: 15, avatar_inicial: 'P', apelido: 'Pedro' }, texto: 'Concordo com o @Marco, 2 a 1' },
+    { id: 4, autor: { id: 12, avatar_inicial: 'B', apelido: 'Bel' }, texto: 'Anotado! Sábado a gente vê quem acertou 😄', respondendo_id: 1 },
+  ],
+  2: [
+    { id: 5, autor: { id: 11, avatar_inicial: 'M', apelido: 'Marco' }, texto: 'Tô dentro! Que horas?' },
+    { id: 6, autor: { id: 19, avatar_inicial: 'G', apelido: 'Gustavo' }, texto: 'Bora! Entro depois das 18h' },
+  ],
+  3: [
+    { id: 7, autor: { id: 17, avatar_inicial: 'J', apelido: 'Julia' }, texto: 'Ficou lindo Helena! Parece de verdade 😍' },
+    { id: 8, autor: { id: 18, avatar_inicial: 'L', apelido: 'Larissa' }, texto: 'Caprichou demais nos detalhes da madeira' },
+    { id: 9, autor: { id: 16, avatar_inicial: 'H', apelido: 'Helena' }, texto: 'Obrigada gente! Demorei uns 3 dias 🎨', respondendo_id: 7 },
+  ],
+  4: [{ id: 10, autor: { id: 17, avatar_inicial: 'J', apelido: 'Julia' }, texto: 'Que legal! Minha palavra favorita é Schmetterling (borboleta)' }],
+  5: [
+    { id: 11, autor: { id: 11, avatar_inicial: 'M', apelido: 'Marco' }, texto: 'Valeu pelo aviso, vou revisar hoje' },
+    { id: 12, autor: { id: 14, avatar_inicial: 'T', apelido: 'Théo' }, texto: 'A questão 7 caiu igualzinha na revisão' },
+  ],
+  6: [
+    { id: 13, autor: { id: 12, avatar_inicial: 'B', apelido: 'Bel' }, texto: 'Que dia bom foi esse! 😄' },
+    { id: 14, autor: { id: 16, avatar_inicial: 'H', apelido: 'Helena' }, texto: 'Melhor passeio do ano' },
+  ],
+  7: [{ id: 15, autor: { id: 16, avatar_inicial: 'H', apelido: 'Helena' }, texto: 'Eu vou! Já me inscrevi na oficina' }],
+  9: [{ id: 16, autor: { id: 13, avatar_inicial: 'L', apelido: 'Lucas' }, texto: 'O da terça é o melhor' }],
+  10: [{ id: 17, autor: { id: 17, avatar_inicial: 'J', apelido: 'Julia' }, texto: 'Cada dia você desenha melhor' }],
+};
+
 const DEMO_GROUPS = [
-  { id: 1, nome: 'Turma 6ºB', icone: 'school', membros: 24, participando: true },
+  { id: 1, nome: 'Turma 8º Ano A', icone: 'school', membros: 24, participando: true },
   { id: 2, nome: 'Grupo do Futebol', icone: 'ball', membros: 18, participando: true },
-  { id: 3, nome: 'Cantinho dos Games', icone: 'gamepad', membros: 31, participando: false },
+  { id: 3, nome: 'Cantinho dos Games', icone: 'gamepad', membros: 31, participando: true },
   { id: 4, nome: 'Clube de Alemão', icone: 'language', membros: 12, participando: false },
   { id: 5, nome: 'Desenho e Arte', icone: 'palette', membros: 15, participando: false },
+  { id: 6, nome: 'Clube do Livro', icone: 'book', membros: 9, participando: false },
+  { id: 7, nome: 'Turma 8º Ano B', icone: 'school', membros: 22, participando: false },
 ];
-const DEMO_RANKING = { minha_posicao: 3, meus_pontos: 80, top: [
-  { posicao: 1, usuario: { avatar_inicial: 'B', apelido: 'Bel' }, pontos: 140 },
-  { posicao: 2, usuario: { avatar_inicial: 'L', apelido: 'Lucas' }, pontos: 110 },
-  { posicao: 3, usuario: { avatar_inicial: 'M', apelido: 'Marco' }, pontos: 80, eu: true },
-  { posicao: 4, usuario: { avatar_inicial: 'T', apelido: 'Théo' }, pontos: 60 },
-  { posicao: 5, usuario: { avatar_inicial: 'H', apelido: 'Helena' }, pontos: 40 },
+
+const DEMO_RANKING = { minha_posicao: 5, meus_pontos: 180, top: [
+  { posicao: 1, usuario: { id: 12, avatar_inicial: 'B', apelido: 'Bel' }, pontos: 240 },
+  { posicao: 2, usuario: { id: 18, avatar_inicial: 'L', apelido: 'Larissa' }, pontos: 225 },
+  { posicao: 3, usuario: { id: 13, avatar_inicial: 'L', apelido: 'Lucas' }, pontos: 210 },
+  { posicao: 4, usuario: { id: 16, avatar_inicial: 'H', apelido: 'Helena' }, pontos: 195 },
+  { posicao: 5, usuario: { id: 11, avatar_inicial: 'M', apelido: 'Marco' }, pontos: 180, eu: true },
+  { posicao: 6, usuario: { id: 17, avatar_inicial: 'J', apelido: 'Julia' }, pontos: 165 },
+  { posicao: 7, usuario: { id: 14, avatar_inicial: 'T', apelido: 'Théo' }, pontos: 150 },
+  { posicao: 8, usuario: { id: 15, avatar_inicial: 'P', apelido: 'Pedro' }, pontos: 120 },
+  { posicao: 9, usuario: { id: 19, avatar_inicial: 'G', apelido: 'Gustavo' }, pontos: 90 },
+  { posicao: 10, usuario: { id: 20, avatar_inicial: 'R', apelido: 'Rafa' }, pontos: 75 },
 ] };
+
 const DEMO_NOTIFS = [
-  { tipo: 'curtida', quem: { avatar_inicial: 'B', apelido: 'Bel' }, texto: 'Testando o mural novo!', tempo: '2 min' },
-  { tipo: 'comentario', quem: { avatar_inicial: 'L', apelido: 'Lucas' }, texto: 'Boa, tô dentro!', tempo: '10 min' },
-  { tipo: 'medalha', titulo: 'Quiz perfeito', icone: 'trophy', tempo: '1 h' },
+  { tipo: 'curtida', quem: { avatar_inicial: 'B', apelido: 'Bel' }, texto: 'Foto da nossa turma no passeio de ontem!', tempo: '5 min' },
+  { tipo: 'comentario', quem: { avatar_inicial: 'H', apelido: 'Helena' }, texto: 'Melhor passeio do ano', tempo: '18 min' },
+  { tipo: 'medalha', titulo: 'Primeiro post', icone: 'star', tempo: '1 h' },
+  { tipo: 'curtida', quem: { avatar_inicial: 'L', apelido: 'Larissa' }, texto: 'Foto da nossa turma no passeio de ontem!', tempo: '2 h' },
+  { tipo: 'comentario', quem: { avatar_inicial: 'T', apelido: 'Théo' }, texto: 'A questão 7 caiu igualzinha na revisão', tempo: '4 h' },
 ];
+
 const TONE_POR_ICONE = { school: 'red', ball: 'blue', gamepad: 'green', language: 'gold', palette: 'red', users: 'red', book: 'blue', rocket: 'gold', star: 'gold' };
 const ICONES_GRUPO = ['users', 'school', 'ball', 'gamepad', 'language', 'palette', 'book', 'rocket', 'star'];
 
@@ -1145,17 +1195,33 @@ function Moderar({ showToast }) {
 
 /* ===================== CONVERSAS (lista) ===================== */
 const DEMO_CONVERSAS = [
-  { id: 1, com: { id: 12, apelido: 'Bel', avatar_inicial: 'B' }, ultima: { texto: 'Bora! que horas?', minha: false, tempo: '5 min' }, nao_lidas: 2 },
-  { id: 2, com: { id: 13, apelido: 'Lucas', avatar_inicial: 'L' }, ultima: { texto: 'Servidor tá on', minha: true, tempo: '1 h' }, nao_lidas: 0 },
+  { id: 1, com: { id: 12, apelido: 'Bel', avatar_inicial: 'B' }, ultima: { texto: '18h no campo da escola', minha: false, tempo: '5 min' }, nao_lidas: 2 },
+  { id: 2, com: { id: 14, apelido: 'Théo', avatar_inicial: 'T' }, ultima: { texto: 'A 5, não entendi os artigos', minha: false, tempo: '40 min' }, nao_lidas: 1 },
+  { id: 3, com: { id: 13, apelido: 'Lucas', avatar_inicial: 'L' }, ultima: { texto: 'Já tô entrando', minha: true, tempo: '2 h' }, nao_lidas: 0 },
+  { id: 4, com: { id: 16, apelido: 'Helena', avatar_inicial: 'H' }, ultima: { texto: 'Valeu pela ajuda no trabalho!', minha: false, tempo: '1 d' }, nao_lidas: 0 },
 ];
 const DEMO_MENSAGENS = {
   1: [
-    { id: 1, texto: 'Oi Marco! Viu o jogo de sábado?', minha: false, tempo: '10 min' },
-    { id: 2, texto: 'Vi sim! Que golaço no final 😱', minha: true, tempo: '8 min' },
-    { id: 3, texto: 'Bora jogar hoje depois da aula?', minha: false, tempo: '6 min' },
-    { id: 4, texto: 'Bora! que horas?', minha: false, tempo: '5 min' },
+    { id: 1, texto: 'Oi Marco! Viu o jogo de sábado?', minha: false, tempo: '3 h' },
+    { id: 2, texto: 'Vi sim! Que golaço no final 😱', minha: true, tempo: '3 h' },
+    { id: 3, texto: 'Bora jogar hoje depois da aula?', minha: false, tempo: '1 h' },
+    { id: 4, texto: 'Bora! Que horas?', minha: true, tempo: '30 min' },
+    { id: 5, texto: '18h no campo da escola', minha: false, tempo: '5 min' },
   ],
-  2: [{ id: 5, texto: 'Servidor tá on', minha: true, tempo: '1 h' }],
+  2: [
+    { id: 6, texto: 'Marco, me ajuda no exercício de alemão?', minha: false, tempo: '1 h' },
+    { id: 7, texto: 'Claro! Qual questão?', minha: true, tempo: '50 min' },
+    { id: 8, texto: 'A 5, não entendi os artigos', minha: false, tempo: '40 min' },
+  ],
+  3: [
+    { id: 9, texto: 'Servidor tá on', minha: false, tempo: '3 h' },
+    { id: 10, texto: 'Já tô entrando', minha: true, tempo: '2 h' },
+  ],
+  4: [
+    { id: 11, texto: 'Consegui terminar o desenho!', minha: false, tempo: '1 d' },
+    { id: 12, texto: 'Ficou muito bom mesmo 👏', minha: true, tempo: '1 d' },
+    { id: 13, texto: 'Valeu pela ajuda no trabalho!', minha: false, tempo: '1 d' },
+  ],
 };
 
 function Conversas({ abrirChat, abrirBusca, showToast }) {
@@ -1283,10 +1349,16 @@ function Lightbox({ src, autor, fechar }) {
 /* ===================== STORIES ===================== */
 const DEMO_STORIES = [
   { usuario: { id: 12, apelido: 'Bel', avatar_inicial: 'B' }, sou_eu: false, todos_vistos: false, stories: [
-    { id: 1, texto: 'Treino hoje às 18h! ⚽', cor_fundo: '#C62828', tempo: '2 h', visto: false },
-    { id: 2, texto: 'Bora ganhar esse jogo', cor_fundo: '#2E86C1', tempo: '1 h', visto: false }] },
+    { id: 1, texto: 'Treino hoje às 18h! Bora ⚽', cor_fundo: '#C62828', tempo: '2 h', visto: false },
+    { id: 2, imagem_url: FOTOS.futebol, texto: 'Campo pronto!', tempo: '1 h', visto: false }] },
+  { usuario: { id: 16, apelido: 'Helena', avatar_inicial: 'H' }, sou_eu: false, todos_vistos: false, stories: [
+    { id: 3, imagem_url: FOTOS.arte, texto: 'Desenho de hoje 🎨', tempo: '3 h', visto: false }] },
+  { usuario: { id: 14, apelido: 'Théo', avatar_inicial: 'T' }, sou_eu: false, todos_vistos: false, stories: [
+    { id: 4, texto: 'Guten Morgen, turma! 🇩🇪', cor_fundo: '#2E86C1', tempo: '4 h', visto: false }] },
+  { usuario: { id: 18, apelido: 'Larissa', avatar_inicial: 'L' }, sou_eu: false, todos_vistos: false, stories: [
+    { id: 5, texto: 'Prova de mat amanhã, bora estudar 📐', cor_fundo: '#8E44AD', tempo: '5 h', visto: false }] },
   { usuario: { id: 13, apelido: 'Lucas', avatar_inicial: 'L' }, sou_eu: false, todos_vistos: true, stories: [
-    { id: 3, texto: 'Servidor novo no ar 🎮', cor_fundo: '#5B8C2A', tempo: '5 h', visto: true }] },
+    { id: 6, texto: 'Servidor novo no ar 🎮', cor_fundo: '#5B8C2A', tempo: '8 h', visto: true }] },
 ];
 
 function BarraStories({ usuario, showToast, recarregar }) {
