@@ -74,6 +74,13 @@ export const api = {
   sairGrupo: (id) => req(`/grupos/${id}/sair`, { method: "POST" }),
   criarGrupo: (nome, icone, cor_tema) => req("/grupos", { method: "POST", body: { nome, icone, cor_tema } }),
 
+  // FalaComigo
+  falaPedido: (dados) => req("/fala/pedidos", { method: "POST", body: dados }),
+  falaFila: () => req("/fala/pedidos"),
+  falaAtender: (id) => req(`/fala/pedidos/${id}/atender`, { method: "POST" }),
+  falaMeus: () => req("/fala/meus"),
+  falaConfig: (dados) => req("/fala/config", { method: "PATCH", body: dados }),
+
   // escola
   avisos: () => req("/avisos"),
   criarAviso: (dados) => req("/avisos", { method: "POST", body: dados }),

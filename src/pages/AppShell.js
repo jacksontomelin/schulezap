@@ -4,6 +4,7 @@ import Icon from '../components/Icons';
 import { Avatar, Tile, Pill, Wordmark } from '../components/UI';
 import { api, setToken, clearToken, getToken } from '../api';
 import { FOTOS } from '../demoFotos';
+import { CATEGORIAS, CARTOES, falar } from '../falacomigo';
 import './AppShell.css';
 
 const API_ATIVA = Boolean(process.env.REACT_APP_API_URL);
@@ -211,7 +212,7 @@ export default function AppShell() {
               ['descobrir', 'search', 'Descobrir'],
               ['conversas', 'chat', 'Mensagens'],
               ['ranking', 'trophy', 'Ranking'],
-              ...(ehModerador ? [['moderar', 'shield', 'Moderar']] : []),
+              ...(ehModerador ? [['fila-fala', 'chat', 'Pedidos de ajuda'], ['moderar', 'shield', 'Moderar']] : []),
               ['perfil', 'user', 'Perfil'],
             ].map(([id, ic, lb]) => (
               <button key={id} onClick={() => { setTab(id); setPainel(null); }} className={`app-nav-btn ${tab === id ? 'is-active' : ''}`}>
@@ -227,6 +228,8 @@ export default function AppShell() {
             {tab === 'feed' && <Feed usuario={usuario} showToast={showToast} temaInicial={postarTema} limparTema={() => setPostarTema('')} abrirPerfil={abrirPerfil} />}
             {tab === 'grupos' && <Grupos showToast={showToast} />}
             {tab === 'jogos' && <Jogos showToast={showToast} usuario={usuario} setUsuario={setUsuario} irPostar={irPostar} />}
+            {tab === 'fala' && <FalaComigo usuario={usuario} showToast={showToast} voltar={() => setTab('feed')} />}
+            {tab === 'fila-fala' && ehModerador && <FilaFala showToast={showToast} />}
             {tab === 'avisos' && <Avisos usuario={usuario} showToast={showToast} />}
             {tab === 'boletim' && <Boletim showToast={showToast} />}
             {tab === 'descobrir' && <Descobrir abrirPerfil={abrirPerfil} showToast={showToast} verHashtag={(t) => { setTab('feed'); showToast(`Mostrando #${t}`); }} />}
@@ -280,7 +283,8 @@ export default function AppShell() {
                   ['grupos', 'users', 'Grupos'],
                   ['jogos', 'gamepad', 'Desafios'],
                   ['ranking', 'trophy', 'Ranking'],
-                  ...(ehModerador ? [['moderar', 'shield', 'Moderar']] : []),
+                  ...(usuario.comunicacao_assistiva ? [['fala', 'chat', 'Fala Comigo']] : []),
+                  ...(ehModerador ? [['fila-fala', 'chat', 'Pedidos'], ['moderar', 'shield', 'Moderar']] : []),
                 ].map(([id, ic, lb]) => (
                   <button key={id} className={`mais-item ${tab === id ? 'is-on' : ''}`} onClick={() => { setTab(id); setMenuMais(false); setPainel(null); }}>
                     <Tile icon={ic} tone={tab === id ? 'solidRed' : 'gold'} size={44} radius={14} />
@@ -291,6 +295,13 @@ export default function AppShell() {
               <button className="btn btn-ghost btn-block" onClick={() => { setMenuMais(false); sair(); }}><Icon name="logout" size={18} /> Sair</button>
             </div>
           </div>
+        )}
+
+        {usuario.comunicacao_assistiva && tab !== 'fala' && (
+          <button className="fala-fab" onClick={() => { setTab('fala'); setPainel(null); }} aria-label="Fala Comigo">
+            <span>💬</span>
+            <em>Fala Comigo</em>
+          </button>
         )}
 
         {toast && <div className="app-toast"><Icon name="check" size={16} stroke={3} />{toast}</div>}
@@ -354,7 +365,7 @@ function Login({ onEntrar, onBack, toast }) {
           <button type="submit" className="btn btn-red btn-block" style={{ marginTop: 14 }} disabled={carregando}>
             {carregando ? <><Icon name="refresh" size={18} /> Entrando…</> : <><Icon name={modo === 'resgatar' ? 'ticket' : 'user'} size={18} /> {modo === 'resgatar' ? 'Criar minha conta' : 'Entrar'}</>}
           </button>
-          {!API_ATIVA && <button type="button" className="btn btn-ghost btn-block" style={{ marginTop: 10 }} onClick={() => onEntrar({ id: 1, apelido: 'Marco', avatar_inicial: 'M', status_icone: 'gamepad', papel: 'aluno', pontos: 80 })}>Ver a demo</button>}
+          {!API_ATIVA && <button type="button" className="btn btn-ghost btn-block" style={{ marginTop: 10 }} onClick={() => onEntrar({ id: 1, apelido: 'Marco', avatar_inicial: 'M', status_icone: 'gamepad', papel: 'aluno', pontos: 180, turma: '8º Ano A', comunicacao_assistiva: true })}>Ver a demo</button>}
         </form>
         <p className="login-notice"><Icon name="lock" size={14} /> Rede fechada. Só entra quem tem convite da escola.</p>
         <p className="login-credit">Criado por <strong>Thiago Tomelin</strong></p>
@@ -1116,6 +1127,27 @@ function Perfil({ usuario, setUsuario, onLogout, showToast }) {
         <p className="label" style={{ marginTop: 22 }}>Conquistas</p>
         {medalhas.length === 0 && <p className="coments-empty">Jogue os desafios pra ganhar medalhas.</p>}
         <div className="badges">{medalhas.map((m, i) => <div key={m.titulo} className="badge-card"><Tile icon={m.icone || 'medal'} tone={tones[i % 4]} size={36} radius={10} /><span>{m.titulo}</span></div>)}</div>
+        <p className="label" style={{ marginTop: 22 }}>Acessibilidade</p>
+        <div className="acess-card">
+          <div className="acess-topo">
+            <Tile icon="chat" tone={usuario.comunicacao_assistiva ? 'solidRed' : 'gold'} size={40} radius={12} />
+            <div>
+              <strong>Fala Comigo</strong>
+              <span>Comunicação assistiva por cartões</span>
+            </div>
+            <button className={`btn btn-sm ${usuario.comunicacao_assistiva ? 'btn-ghost' : 'btn-red'}`} onClick={async () => {
+              const novo = !usuario.comunicacao_assistiva;
+              setUsuario({ ...usuario, comunicacao_assistiva: novo });
+              if (API_ATIVA) { try { await api.falaConfig({ ativo: novo }); } catch (e) { showToast?.(e.message); } }
+              showToast?.(novo ? 'Fala Comigo ativado' : 'Fala Comigo desativado');
+            }}>{usuario.comunicacao_assistiva ? 'Ativado' : 'Ativar'}</button>
+          </div>
+          <p className="acess-txt">Toque nos desenhos para falar. A coordenação é avisada quando você pede ajuda.</p>
+          <a className="acess-link" href="https://falacomigo.unicontroller.com.br" target="_blank" rel="noreferrer">
+            <Icon name="arrowRight" size={15} /> Abrir o app FalaComigo completo
+          </a>
+        </div>
+
         <button className="btn btn-ghost btn-block" style={{ marginTop: 22 }} onClick={onLogout}><Icon name="logout" size={18} /> Sair</button>
         <p className="profile-credit">Criado por <strong>Thiago Tomelin</strong></p>
       </div>
@@ -1890,5 +1922,153 @@ function CartaoAluno({ usuario, aoTocar }) {
         <span>{usuario.turma || 'Aluno'} · Doutor Blumenau</span>
       </div>
     </button>
+  );
+}
+
+/* ===================== FALACOMIGO — comunicação assistiva ===================== */
+function FalaComigo({ usuario, showToast, voltar }) {
+  const [cat, setCat] = useState('sos');
+  const [ultimo, setUltimo] = useState(null);
+  const [enviando, setEnviando] = useState(false);
+  const [historico, setHistorico] = useState([]);
+
+  useEffect(() => {
+    if (API_ATIVA) api.falaMeus().then(setHistorico).catch(() => {});
+    // "acorda" as vozes do aparelho (alguns navegadores só carregam depois)
+    try { window.speechSynthesis?.getVoices(); } catch (e) { /* */ }
+  }, []);
+
+  const tocar = async (item) => {
+    const urgente = !!item.sos;
+    falar(item.f);
+    setUltimo({ ...item, urgente });
+    if (navigator.vibrate) navigator.vibrate(urgente ? [80, 50, 80] : 40);
+
+    if (!API_ATIVA) { showToast(urgente ? 'Coordenação avisada! 🆘' : 'Pedido enviado'); return; }
+    try {
+      setEnviando(true);
+      await api.falaPedido({ categoria: cat, item: item.id, rotulo: item.n, frase: item.f, urgente });
+      setHistorico((h) => [{ id: Date.now(), rotulo: item.n, frase: item.f, urgente, tempo: 'agora' }, ...h]);
+      showToast(urgente ? 'Coordenação avisada! 🆘' : 'Pedido enviado');
+    } catch (e) { showToast(e.message); } finally { setEnviando(false); }
+  };
+
+  const itens = CARTOES[cat] || [];
+
+  return (
+    <div className="fala">
+      <div className="fala-topo">
+        <button className="voltar-link" onClick={voltar}><Icon name="arrowLeft" size={16} /> Voltar</button>
+        <h2 className="h2">Fala Comigo</h2>
+        <p className="sub">Toque no que você quer dizer. O app fala por você.</p>
+      </div>
+
+      {ultimo && (
+        <div className={`fala-eco ${ultimo.urgente ? 'urgente' : ''}`}>
+          <Icon name={ultimo.urgente ? 'flag' : 'chat'} size={20} />
+          <p>{ultimo.f}</p>
+          <button onClick={() => falar(ultimo.f)} aria-label="Repetir"><Icon name="refresh" size={18} /></button>
+        </div>
+      )}
+
+      <div className="fala-cats">
+        {CATEGORIAS.map((c) => (
+          <button key={c.id} className={`fala-cat ${cat === c.id ? 'is-on' : ''} ${c.id === 'sos' ? 'sos' : ''}`} onClick={() => setCat(c.id)}>
+            <span className="fala-cat-e">{c.e}</span>
+            <span>{c.n}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="fala-grade">
+        {itens.map((it) => (
+          <button key={it.id} className={`fala-card ${it.sos ? 'sos' : ''}`} onClick={() => tocar(it)} disabled={enviando}>
+            <span className="fala-card-n">{it.n}</span>
+          </button>
+        ))}
+      </div>
+
+      {historico.length > 0 && (
+        <div className="fala-hist">
+          <p className="label">O que você já disse hoje</p>
+          {historico.slice(0, 6).map((h) => (
+            <div key={h.id} className={`fala-hist-item ${h.urgente ? 'urgente' : ''}`}>
+              <strong>{h.rotulo}</strong><span>{h.tempo}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---- Fila do professor: quem pediu ajuda ---- */
+function FilaFala({ showToast }) {
+  const [dados, setDados] = useState(API_ATIVA ? null : {
+    abertos: [
+      { id: 1, rotulo: 'SOCORRO', frase: 'Eu preciso de ajuda agora!', urgente: true, aluno: { apelido: 'Miguel', avatar_inicial: 'M', turma: '6º Ano A' }, tempo: '2 min' },
+      { id: 2, rotulo: 'Muito barulho', frase: 'Está muito barulhento para mim', urgente: false, aluno: { apelido: 'Miguel', avatar_inicial: 'M', turma: '6º Ano A' }, tempo: '18 min' },
+    ],
+    atendidos: [{ id: 3, rotulo: 'Banheiro', frase: 'Eu preciso ir ao banheiro', urgente: false, aluno: { apelido: 'Miguel', avatar_inicial: 'M' }, tempo: '1 h', atendido: true, atendido_por: 'ProfAna' }],
+  });
+
+  const carregar = useCallback(async () => {
+    if (!API_ATIVA) return;
+    try { setDados(await api.falaFila()); } catch (e) { showToast(e.message); setDados({ abertos: [], atendidos: [] }); }
+  }, [showToast]);
+
+  useEffect(() => { carregar(); }, [carregar]);
+  useEffect(() => {
+    if (!API_ATIVA) return;
+    const t = setInterval(carregar, 15000); // atualiza sozinho
+    return () => clearInterval(t);
+  }, [carregar]);
+
+  const atender = async (id) => {
+    setDados((d) => ({ ...d, abertos: d.abertos.filter((p) => p.id !== id) }));
+    if (API_ATIVA) { try { await api.falaAtender(id); carregar(); } catch (e) { showToast(e.message); } }
+    showToast('Marcado como atendido');
+  };
+
+  if (!dados) return <p className="feed-end">Carregando…</p>;
+
+  return (
+    <div className="pad">
+      <h2 className="h2">Pedidos de ajuda</h2>
+      <p className="sub">Alunos que usam a comunicação assistiva.</p>
+
+      {dados.abertos.length === 0 && (
+        <div className="mod-empty"><Icon name="check" size={22} stroke={2.5} /> Nenhum pedido aberto agora.</div>
+      )}
+
+      {dados.abertos.map((p) => (
+        <div key={p.id} className={`fala-pedido ${p.urgente ? 'urgente' : ''}`}>
+          <Avatar initial={p.aluno.avatar_inicial} foto={p.aluno.foto_url} size={44} />
+          <div className="fala-pedido-body">
+            <div className="fala-pedido-tags">
+              {p.urgente && <span className="fala-tag-sos">🆘 Urgente</span>}
+              <span className="fala-tag">{p.rotulo}</span>
+            </div>
+            <p className="fala-pedido-frase">"{p.frase}"</p>
+            <span className="fala-pedido-meta">{p.aluno.apelido}{p.aluno.turma ? ` · ${p.aluno.turma}` : ''} · {p.tempo}</span>
+          </div>
+          <button className="btn btn-red btn-sm" onClick={() => atender(p.id)}><Icon name="check" size={15} stroke={3} /> Atendi</button>
+        </div>
+      ))}
+
+      {dados.atendidos?.length > 0 && (<>
+        <p className="label" style={{ marginTop: 22 }}>Já atendidos</p>
+        {dados.atendidos.map((p) => (
+          <div key={p.id} className="fala-pedido atendido">
+            <Avatar initial={p.aluno.avatar_inicial} size={36} />
+            <div className="fala-pedido-body">
+              <p className="fala-pedido-frase">"{p.frase}"</p>
+              <span className="fala-pedido-meta">{p.aluno.apelido} · {p.tempo} · atendido por {p.atendido_por}</span>
+            </div>
+            <Icon name="check" size={20} style={{ color: '#3B6D11' }} />
+          </div>
+        ))}
+      </>)}
+    </div>
   );
 }

@@ -686,3 +686,85 @@
   .chat-msgs { max-height: none; }
   .chat-form { position: sticky; bottom: 0; }
 }
+
+/* ============ FALACOMIGO — comunicação assistiva ============ */
+.fala { padding: 16px; }
+.fala-topo { margin-bottom: 14px; }
+.fala-eco {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--blue-light); border: 2px solid #A8D0EA; border-radius: 16px;
+  padding: 14px; margin-bottom: 14px; color: var(--blue-text);
+}
+.fala-eco.urgente { background: var(--red-light); border-color: var(--red); color: var(--red); }
+.fala-eco p { flex: 1; font-size: 17px; font-weight: 900; line-height: 1.3; }
+.fala-eco button { background: rgba(255,255,255,.7); border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: inherit; cursor: pointer; }
+
+.fala-cats { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 12px; scrollbar-width: none; }
+.fala-cats::-webkit-scrollbar { display: none; }
+.fala-cat {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: #fff; border: 2px solid var(--line); border-radius: 14px;
+  padding: 10px 14px; min-width: 78px; cursor: pointer; font-family: var(--font);
+  font-weight: 800; font-size: 11.5px; color: var(--ink-2); transition: all .12s;
+}
+.fala-cat-e { font-size: 24px; line-height: 1; }
+.fala-cat.is-on { background: var(--gold); border-color: var(--gold-dark); color: #4A3000; }
+.fala-cat.sos { border-color: #F3B5B0; }
+.fala-cat.sos.is-on { background: var(--red); border-color: var(--red-dark); color: #fff; }
+
+.fala-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.fala-card {
+  min-height: 96px; display: flex; align-items: center; justify-content: center;
+  background: #fff; border: 3px solid var(--line-2); border-radius: 18px;
+  padding: 14px 10px; cursor: pointer; font-family: var(--font);
+  box-shadow: 0 4px 0 var(--line-2); transition: transform .08s, box-shadow .08s;
+}
+.fala-card:active { transform: translateY(4px); box-shadow: none; }
+.fala-card-n { font-size: 17px; font-weight: 900; color: var(--ink); text-align: center; line-height: 1.25; }
+.fala-card.sos { background: var(--red); border-color: var(--red-dark); box-shadow: 0 4px 0 var(--red-dark); }
+.fala-card.sos .fala-card-n { color: #fff; }
+
+.fala-hist { margin-top: 22px; }
+.fala-hist-item { display: flex; justify-content: space-between; align-items: center; background: var(--cream); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; margin-bottom: 6px; }
+.fala-hist-item strong { font-size: 13.5px; font-weight: 800; color: var(--ink); }
+.fala-hist-item span { font-size: 11.5px; font-weight: 700; color: var(--ink-3); }
+.fala-hist-item.urgente { background: var(--red-light); border-color: #F3B5B0; }
+
+/* botão flutuante do aluno */
+.fala-fab {
+  position: fixed; right: 18px; bottom: 92px; z-index: 55;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--red); color: #fff; border: none;
+  border-radius: 999px; padding: 12px 18px;
+  box-shadow: 0 6px 18px rgba(198,40,40,.4), 0 4px 0 var(--red-dark);
+  font-family: var(--font); font-weight: 900; font-size: 14px; cursor: pointer;
+}
+.fala-fab span { font-size: 20px; line-height: 1; }
+.fala-fab em { font-style: normal; }
+.fala-fab:active { transform: translateY(4px); box-shadow: 0 4px 12px rgba(198,40,40,.35); }
+
+/* fila do professor */
+.fala-pedido { display: flex; align-items: center; gap: 12px; background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 12px; margin-bottom: 10px; }
+.fala-pedido.urgente { border-color: var(--red); background: #FFF7F6; box-shadow: 0 0 0 3px var(--red-light); }
+.fala-pedido.atendido { opacity: .65; }
+.fala-pedido-body { flex: 1; min-width: 0; }
+.fala-pedido-tags { display: flex; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
+.fala-tag-sos { font-size: 10.5px; font-weight: 900; background: var(--red); color: #fff; padding: 2px 9px; border-radius: 999px; }
+.fala-tag { font-size: 10.5px; font-weight: 800; background: var(--gold-light); color: var(--gold-text); padding: 2px 9px; border-radius: 999px; }
+.fala-pedido-frase { font-size: 15px; font-weight: 800; color: var(--ink); line-height: 1.35; font-style: italic; }
+.fala-pedido-meta { font-size: 12px; font-weight: 700; color: var(--ink-3); }
+
+/* acessibilidade no perfil */
+.acess-card { background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 14px; }
+.acess-topo { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.acess-topo > div { flex: 1; display: flex; flex-direction: column; }
+.acess-topo strong { font-size: 15px; font-weight: 900; color: var(--ink); }
+.acess-topo span { font-size: 12.5px; font-weight: 700; color: var(--ink-3); }
+.acess-txt { font-size: 13px; font-weight: 700; color: var(--ink-2); line-height: 1.5; margin-bottom: 10px; }
+.acess-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: var(--red); }
+.acess-link:hover { text-decoration: underline; }
+
+@media (min-width: 901px) {
+  .fala-fab { bottom: 28px; right: 28px; }
+  .fala-grade { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+}

@@ -286,3 +286,20 @@ CREATE TABLE agendas (
   tipo VARCHAR DEFAULT 'tarefa', data DATE NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT now(), updated_at TIMESTAMP NOT NULL DEFAULT now());
 CREATE INDEX idx_agendas_data ON agendas(escola_id, data);
+
+-- migration 13: FalaComigo (comunicação assistiva)
+ALTER TABLE usuarios ADD COLUMN comunicacao_assistiva BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE usuarios ADD COLUMN falacomigo_url VARCHAR;
+
+CREATE TABLE pedidos_fala (
+  id BIGSERIAL PRIMARY KEY,
+  usuario_id BIGINT NOT NULL REFERENCES usuarios(id),
+  escola_id BIGINT NOT NULL REFERENCES escolas(id),
+  categoria VARCHAR NOT NULL, item VARCHAR NOT NULL,
+  rotulo VARCHAR NOT NULL, frase TEXT NOT NULL,
+  urgente BOOLEAN NOT NULL DEFAULT false,
+  atendido_por_id BIGINT REFERENCES usuarios(id),
+  atendido_em TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT now(), updated_at TIMESTAMP NOT NULL DEFAULT now());
+CREATE INDEX idx_pedidos_fala_escola ON pedidos_fala(escola_id, created_at);
+CREATE INDEX idx_pedidos_fala_usuario ON pedidos_fala(usuario_id, created_at);

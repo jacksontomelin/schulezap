@@ -16,6 +16,7 @@ class Usuario < ApplicationRecord
   has_many :stories, class_name: "Story", dependent: :destroy
   has_many :mencoes, class_name: "Mencao", dependent: :destroy
   has_many :notas, class_name: "Nota", dependent: :destroy
+  has_many :pedidos_fala, class_name: "PedidoFala", dependent: :destroy
   has_many :posts_salvos, through: :salvamentos, source: :post
 
   # amizades (seguir)
@@ -66,7 +67,8 @@ class Usuario < ApplicationRecord
       pontos: respond_to?(:pontos) ? pontos : 0,
       bio: respond_to?(:bio) ? bio : nil,
       foto_url: respond_to?(:foto_url) ? foto_url : nil,
-      turma: respond_to?(:turma) ? turma : nil
+      turma: respond_to?(:turma) ? turma : nil,
+      comunicacao_assistiva: respond_to?(:comunicacao_assistiva) ? comunicacao_assistiva : false
     }
   end
 

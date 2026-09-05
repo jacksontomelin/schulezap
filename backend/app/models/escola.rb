@@ -6,6 +6,7 @@ class Escola < ApplicationRecord
   has_many :avisos, class_name: "Aviso", dependent: :destroy
   has_many :disciplinas, class_name: "Disciplina", dependent: :destroy
   has_many :agendas, class_name: "Agenda", dependent: :destroy
+  has_many :pedidos_fala, class_name: "PedidoFala", dependent: :destroy
 
   validates :nome, presence: true
   validates :slug, presence: true, uniqueness: true

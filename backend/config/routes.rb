@@ -36,6 +36,13 @@ Rails.application.routes.draw do
       get   "usuarios/:id/seguidores", to: "descobrir#seguidores"
       get   "usuarios/:id/seguindo",   to: "descobrir#seguindo"
 
+      # FalaComigo — comunicacao assistiva
+      post  "fala/pedidos",             to: "fala#criar"
+      get   "fala/pedidos",             to: "fala#index"
+      post  "fala/pedidos/:id/atender", to: "fala#atender"
+      get   "fala/meus",                to: "fala#meus"
+      patch "fala/config",              to: "fala#config"
+
       # escola: avisos, boletim, agenda
       get    "avisos",          to: "avisos#index"
       post   "avisos",          to: "avisos#create"
