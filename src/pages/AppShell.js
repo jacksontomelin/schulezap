@@ -78,9 +78,16 @@ export default function AppShell() {
   const [painel, setPainel] = useState(null); // 'notif' | 'busca' | null
   const [postarTema, setPostarTema] = useState('');
   const [perfilId, setPerfilId] = useState(null); // ver perfil de outro usuário
+  const [conversaId, setConversaId] = useState(null); // chat aberto
 
   const showToast = useCallback((t) => { setToast(t); setTimeout(() => setToast(null), 2000); }, []);
   const abrirPerfil = useCallback((id) => { setPerfilId(id); setTab('perfil-outro'); setPainel(null); }, []);
+  const abrirChat = useCallback(async (usuarioId) => {
+    setPainel(null);
+    if (!API_ATIVA) { setConversaId(usuarioId || 1); setTab('chat'); return; }
+    try { const c = await api.abrirConversa(usuarioId); setConversaId(c.id); setTab('chat'); }
+    catch (e) { setToast(e.message); setTimeout(() => setToast(null), 2000); }
+  }, []);
 
   useEffect(() => {
     if (API_ATIVA && getToken()) {
@@ -111,6 +118,7 @@ export default function AppShell() {
             <button className={`app-icon-btn ${painel === 'notif' ? 'is-on' : ''}`} aria-label="Notificações" onClick={() => setPainel(painel === 'notif' ? null : 'notif')}>
               <Icon name="bell" size={22} /><span className="app-dot" />
             </button>
+            <button className={`app-icon-btn ${tab === 'conversas' ? 'is-on' : ''}`} aria-label="Mensagens" onClick={() => { setTab('conversas'); setPainel(null); }}><Icon name="chat" size={22} /></button>
             <button className="app-icon-btn" aria-label="Ranking" onClick={() => setTab('ranking')}><Icon name="trophy" size={22} /></button>
           </div>
         </header>
@@ -121,6 +129,7 @@ export default function AppShell() {
               ['feed', 'home', 'Mural'],
               ['grupos', 'users', 'Grupos'],
               ['jogos', 'gamepad', 'Desafios'],
+              ['conversas', 'chat', 'Mensagens'],
               ['ranking', 'trophy', 'Ranking'],
               ...(ehModerador ? [['moderar', 'shield', 'Moderar']] : []),
               ['perfil', 'user', 'Perfil'],
@@ -140,7 +149,9 @@ export default function AppShell() {
             {tab === 'jogos' && <Jogos showToast={showToast} usuario={usuario} setUsuario={setUsuario} irPostar={irPostar} />}
             {tab === 'ranking' && <Ranking usuario={usuario} abrirPerfil={abrirPerfil} />}
             {tab === 'perfil' && <Perfil usuario={usuario} setUsuario={setUsuario} onLogout={sair} showToast={showToast} />}
-            {tab === 'perfil-outro' && <PerfilOutro id={perfilId} usuario={usuario} showToast={showToast} voltar={() => setTab('feed')} />}
+            {tab === 'perfil-outro' && <PerfilOutro id={perfilId} usuario={usuario} showToast={showToast} voltar={() => setTab('feed')} abrirChat={abrirChat} />}
+            {tab === 'conversas' && <Conversas abrirChat={(id) => { setConversaId(id); setTab('chat'); }} abrirBusca={() => setPainel('busca')} showToast={showToast} />}
+            {tab === 'chat' && <Chat conversaId={conversaId} usuario={usuario} showToast={showToast} voltar={() => setTab('conversas')} />}
             {tab === 'moderar' && ehModerador && <Moderar showToast={showToast} />}
           </main>
         </div>
@@ -515,7 +526,7 @@ function Busca({ abrirPerfil, irGrupos, fechar }) {
 }
 
 /* ===================== PERFIL DE OUTRA PESSOA ===================== */
-function PerfilOutro({ id, usuario, showToast, voltar }) {
+function PerfilOutro({ id, usuario, showToast, voltar, abrirChat }) {
   const [dados, setDados] = useState(null);
   const [posts, setPosts] = useState([]);
   const [seguindo, setSeguindo] = useState(false);
@@ -552,9 +563,12 @@ function PerfilOutro({ id, usuario, showToast, voltar }) {
         {u.bio && <p className="perfil-bio">{u.bio}</p>}
         <p className="profile-school">{dados.escola} · Pomerode</p>
         {!dados.sou_eu && (
-          <button className={`btn btn-sm ${seguindo ? 'btn-ghost' : 'btn-red'}`} style={{ marginTop: 12 }} onClick={toggleSeguir}>
-            {seguindo ? <><Icon name="check" size={15} stroke={3} /> Seguindo</> : <><Icon name="plus" size={15} stroke={3} /> Seguir</>}
-          </button>
+          <div className="perfil-acoes">
+            <button className={`btn btn-sm ${seguindo ? 'btn-ghost' : 'btn-red'}`} onClick={toggleSeguir}>
+              {seguindo ? <><Icon name="check" size={15} stroke={3} /> Seguindo</> : <><Icon name="plus" size={15} stroke={3} /> Seguir</>}
+            </button>
+            <button className="btn btn-gold btn-sm" onClick={() => abrirChat?.(id)}><Icon name="chat" size={15} /> Mensagem</button>
+          </div>
         )}
       </div>
       <div className="stats">
@@ -930,6 +944,114 @@ function Moderar({ showToast }) {
             <code>{c.codigo}</code><span>{c.usado ? `usado${c.usado_por ? ` · ${c.usado_por}` : ''}` : 'disponível'}</span>
           </button>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/* ===================== CONVERSAS (lista) ===================== */
+const DEMO_CONVERSAS = [
+  { id: 1, com: { id: 12, apelido: 'Bel', avatar_inicial: 'B' }, ultima: { texto: 'Bora! que horas?', minha: false, tempo: '5 min' }, nao_lidas: 2 },
+  { id: 2, com: { id: 13, apelido: 'Lucas', avatar_inicial: 'L' }, ultima: { texto: 'Servidor tá on', minha: true, tempo: '1 h' }, nao_lidas: 0 },
+];
+const DEMO_MENSAGENS = {
+  1: [
+    { id: 1, texto: 'Oi Marco! Viu o jogo de sábado?', minha: false, tempo: '10 min' },
+    { id: 2, texto: 'Vi sim! Que golaço no final 😱', minha: true, tempo: '8 min' },
+    { id: 3, texto: 'Bora jogar hoje depois da aula?', minha: false, tempo: '6 min' },
+    { id: 4, texto: 'Bora! que horas?', minha: false, tempo: '5 min' },
+  ],
+  2: [{ id: 5, texto: 'Servidor tá on', minha: true, tempo: '1 h' }],
+};
+
+function Conversas({ abrirChat, abrirBusca, showToast }) {
+  const [lista, setLista] = useState(API_ATIVA ? null : DEMO_CONVERSAS);
+
+  const carregar = useCallback(async () => {
+    if (!API_ATIVA) return;
+    try { setLista(await api.conversas()); } catch (e) { showToast(e.message); setLista([]); }
+  }, [showToast]);
+  useEffect(() => { carregar(); }, [carregar]);
+
+  return (
+    <div className="pad">
+      <div className="jogos-head">
+        <div><h2 className="h2">Mensagens</h2><p className="sub" style={{ margin: 0 }}>Converse com a turma.</p></div>
+        <button className="btn btn-gold btn-sm" onClick={abrirBusca}><Icon name="plus" size={16} stroke={2.5} /> Nova</button>
+      </div>
+      {lista === null && <p className="feed-end">Carregando…</p>}
+      {lista && lista.length === 0 && (
+        <div className="mod-empty" style={{ background: 'var(--gold-light)', color: 'var(--gold-text)' }}>
+          <Icon name="chat" size={22} /> Nenhuma conversa ainda. Busque um colega para começar.
+        </div>
+      )}
+      {lista && lista.map((c) => (
+        <button key={c.id} className="conv-row" onClick={() => abrirChat(c.id)}>
+          <Avatar initial={c.com.avatar_inicial} size={48} />
+          <div className="conv-body">
+            <strong>{c.com.apelido}</strong>
+            <span>{c.ultima ? `${c.ultima.minha ? 'Você: ' : ''}${c.ultima.texto}` : 'Diga oi!'}</span>
+          </div>
+          <div className="conv-meta">
+            <em>{c.ultima?.tempo || ''}</em>
+            {c.nao_lidas > 0 && <span className="conv-badge">{c.nao_lidas}</span>}
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ===================== CHAT (conversa aberta) ===================== */
+function Chat({ conversaId, usuario, showToast, voltar }) {
+  const [com, setCom] = useState(null);
+  const [msgs, setMsgs] = useState(API_ATIVA ? null : (DEMO_MENSAGENS[conversaId] || []));
+  const [texto, setTexto] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const fimRef = React.useRef(null);
+
+  const carregar = useCallback(async () => {
+    if (!API_ATIVA) { setCom(DEMO_CONVERSAS.find((c) => c.id === conversaId)?.com || { apelido: 'Bel', avatar_inicial: 'B' }); return; }
+    try { const r = await api.mensagens(conversaId); setCom(r.com); setMsgs(r.mensagens); }
+    catch (e) { showToast(e.message); setMsgs([]); }
+  }, [conversaId, showToast]);
+
+  useEffect(() => { carregar(); }, [carregar]);
+  // "tempo real": recarrega a cada 4s enquanto a tela está aberta
+  useEffect(() => {
+    if (!API_ATIVA) return;
+    const t = setInterval(carregar, 4000);
+    return () => clearInterval(t);
+  }, [carregar]);
+  useEffect(() => { fimRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs]);
+
+  const enviar = async () => {
+    if (!texto.trim()) return;
+    const t = texto.trim(); setTexto('');
+    if (!API_ATIVA) { setMsgs((m) => [...(m || []), { id: Date.now(), texto: t, minha: true, tempo: 'agora' }]); return; }
+    try { setEnviando(true); const m = await api.enviarMensagem(conversaId, t); setMsgs((x) => [...(x || []), m]); }
+    catch (e) { showToast(e.message); setTexto(t); } finally { setEnviando(false); }
+  };
+
+  return (
+    <div className="chat">
+      <div className="chat-topo">
+        <button className="app-icon-btn" onClick={voltar} aria-label="Voltar"><Icon name="arrowLeft" size={20} /></button>
+        {com && <><Avatar initial={com.avatar_inicial} size={38} /><strong>{com.apelido}</strong></>}
+      </div>
+      <div className="chat-msgs">
+        {msgs === null && <p className="feed-end">Carregando…</p>}
+        {msgs && msgs.length === 0 && <p className="coments-empty" style={{ textAlign: 'center', padding: 20 }}>Nenhuma mensagem ainda. Diga oi!</p>}
+        {msgs && msgs.map((m) => (
+          <div key={m.id} className={`bolha ${m.minha ? 'minha' : ''}`}>
+            <p>{m.texto}</p><em>{m.tempo}</em>
+          </div>
+        ))}
+        <div ref={fimRef} />
+      </div>
+      <div className="chat-form">
+        <input className="input" value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && enviar()} placeholder="Escreva uma mensagem…" />
+        <button className="btn btn-red btn-sm" onClick={enviar} disabled={enviando}><Icon name="send" size={16} /></button>
       </div>
     </div>
   );

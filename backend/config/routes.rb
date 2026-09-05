@@ -29,6 +29,12 @@ Rails.application.routes.draw do
       get  "ranking",                     to: "ranking#index"
       get  "notificacoes",                to: "notificacoes#index"
 
+      # chat
+      get  "conversas",              to: "conversas#index"
+      post "conversas",              to: "conversas#create"
+      get  "conversas/:id/mensagens", to: "conversas#mensagens"
+      post "conversas/:id/mensagens", to: "conversas#enviar"
+
       # social
       post "usuarios/:id/seguir", to: "amizades#seguir"
       get  "busca",               to: "busca#index"

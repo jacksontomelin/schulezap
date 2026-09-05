@@ -63,6 +63,12 @@ export const api = {
   sairGrupo: (id) => req(`/grupos/${id}/sair`, { method: "POST" }),
   criarGrupo: (nome, icone, cor_tema) => req("/grupos", { method: "POST", body: { nome, icone, cor_tema } }),
 
+  // chat
+  conversas: () => req("/conversas"),
+  abrirConversa: (usuario_id) => req("/conversas", { method: "POST", body: { usuario_id } }),
+  mensagens: (id) => req(`/conversas/${id}/mensagens`),
+  enviarMensagem: (id, texto) => req(`/conversas/${id}/mensagens`, { method: "POST", body: { texto } }),
+
   // desafios, ranking, notificacoes
   desafioResultado: (desafio, acertos, total) =>
     req(`/desafios/${desafio}/resultado`, { method: "POST", body: { acertos, total } }),

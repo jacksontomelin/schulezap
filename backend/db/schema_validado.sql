@@ -165,3 +165,25 @@ CREATE TABLE salvamentos (
   updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
 CREATE UNIQUE INDEX idx_salvamentos_uniq ON salvamentos(usuario_id, post_id);
+
+-- migration 9: chat
+CREATE TABLE conversas (
+  id BIGSERIAL PRIMARY KEY,
+  usuario_a_id BIGINT NOT NULL REFERENCES usuarios(id),
+  usuario_b_id BIGINT NOT NULL REFERENCES usuarios(id),
+  ultima_mensagem_em TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX idx_conversas_par ON conversas(usuario_a_id, usuario_b_id);
+
+CREATE TABLE mensagens (
+  id BIGSERIAL PRIMARY KEY,
+  conversa_id BIGINT NOT NULL REFERENCES conversas(id),
+  remetente_id BIGINT NOT NULL REFERENCES usuarios(id),
+  texto TEXT NOT NULL,
+  lida_em TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_mensagens_conversa ON mensagens(conversa_id, created_at);

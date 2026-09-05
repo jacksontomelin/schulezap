@@ -344,3 +344,28 @@
 /* stories viram botões */
 .story { background: none; border: none; cursor: pointer; font-family: var(--font); }
 .rank-row { cursor: pointer; width: 100%; text-align: left; font-family: var(--font); }
+
+/* ============ CONVERSAS E CHAT ============ */
+.conv-row { display: flex; align-items: center; gap: 12px; width: 100%; background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 12px; margin-bottom: 8px; cursor: pointer; font-family: var(--font); text-align: left; transition: border-color .12s; }
+.conv-row:hover { border-color: var(--line-2); }
+.conv-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.conv-body strong { font-size: 15px; font-weight: 900; color: var(--ink); }
+.conv-body span { font-size: 13px; font-weight: 700; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.conv-meta em { font-style: normal; font-size: 11.5px; font-weight: 700; color: var(--ink-3); }
+.conv-badge { background: var(--red); color: #fff; font-size: 11px; font-weight: 900; min-width: 20px; height: 20px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 6px; }
+
+.chat { display: flex; flex-direction: column; height: 100%; min-height: 420px; }
+.chat-topo { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 2px solid var(--line); background: #fff; position: sticky; top: 0; z-index: 3; }
+.chat-topo strong { font-size: 16px; font-weight: 900; }
+.chat-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; background: var(--cream); min-height: 260px; max-height: 52vh; }
+.bolha { max-width: 78%; align-self: flex-start; background: #fff; border: 2px solid var(--line); border-radius: 16px 16px 16px 4px; padding: 9px 13px; }
+.bolha.minha { align-self: flex-end; background: var(--gold); border-color: var(--gold-dark); border-radius: 16px 16px 4px 16px; }
+.bolha p { font-size: 14.5px; font-weight: 700; color: var(--ink); line-height: 1.4; margin: 0; }
+.bolha em { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--ink-3); display: block; margin-top: 3px; }
+.bolha.minha em { color: #7a4d00; text-align: right; }
+.chat-form { display: flex; gap: 8px; padding: 12px 16px; border-top: 2px solid var(--line); background: #fff; }
+.chat-form .input { flex: 1; height: 44px; }
+.chat-form .btn-sm { padding: 0 16px; height: 44px; }
+
+.perfil-acoes { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
