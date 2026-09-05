@@ -62,6 +62,30 @@ const REACOES = [
   { tipo: 'uau', emoji: '😮', label: 'Uau' },
   { tipo: 'triste', emoji: '😢', label: 'Triste' },
 ];
+/* Redimensiona/comprime a foto no navegador antes de enviar.
+   Fotos de celular tem 3-8MB; assim chegam leves no servidor. */
+function comprimirImagem(file, onOk, onErro, maxLado = 1280, qualidade = 0.78) {
+  const reader = new FileReader();
+  reader.onerror = onErro;
+  reader.onload = () => {
+    const img = new Image();
+    img.onerror = onErro;
+    img.onload = () => {
+      let { width: w, height: h } = img;
+      if (w > maxLado || h > maxLado) {
+        if (w >= h) { h = Math.round((h * maxLado) / w); w = maxLado; }
+        else { w = Math.round((w * maxLado) / h); h = maxLado; }
+      }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      onOk(c.toDataURL('image/jpeg', qualidade));
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 const emojiDe = (tipo) => (REACOES.find((r) => r.tipo === tipo) || REACOES[0]).emoji;
 
 const diaDoAno = () => Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
@@ -277,8 +301,8 @@ function Feed({ usuario, showToast, temaInicial, limparTema, abrirPerfil }) {
 
   const escolherFoto = (e) => {
     const f = e.target.files?.[0]; if (!f) return;
-    if (f.size > 1.5 * 1024 * 1024) { showToast('Imagem muito grande (máx 1,5 MB)'); return; }
-    const r = new FileReader(); r.onload = () => setImagem(r.result); r.readAsDataURL(f);
+    comprimirImagem(f, (dataUrl) => setImagem(dataUrl), () => showToast('Não consegui ler essa imagem'));
+    e.target.value = '';
   };
 
   const publicar = async () => {
@@ -1157,8 +1181,8 @@ function CriarStory({ usuario, fechar, aoCriar, showToast }) {
 
   const escolher = (e) => {
     const f = e.target.files?.[0]; if (!f) return;
-    if (f.size > 1.5 * 1024 * 1024) { showToast('Imagem muito grande (máx 1,5 MB)'); return; }
-    const r = new FileReader(); r.onload = () => setImagem(r.result); r.readAsDataURL(f);
+    comprimirImagem(f, (dataUrl) => setImagem(dataUrl), () => showToast('Não consegui ler essa imagem'));
+    e.target.value = '';
   };
 
   const publicar = async () => {

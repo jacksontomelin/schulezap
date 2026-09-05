@@ -9,10 +9,15 @@ class Post < ApplicationRecord
   has_many :denuncias, class_name: "Denuncia", dependent: :destroy
   has_many :salvamentos, class_name: "Salvamento", dependent: :destroy
 
-  validates :texto, presence: true, length: { maximum: 2000 }
+  validates :texto, length: { maximum: 2000 }
+  validate  :precisa_ter_conteudo
 
   scope :visiveis, -> { where(oculto: false) }
   scope :recentes, -> { order(created_at: :desc) }
+
+  def precisa_ter_conteudo
+    errors.add(:base, "Escreva algo ou escolha uma foto") if texto.blank? && imagem_url.blank?
+  end
 
   def reagiu?(usuario)
     reacoes.exists?(usuario_id: usuario.id)
