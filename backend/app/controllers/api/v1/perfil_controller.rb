@@ -7,7 +7,7 @@ module Api
         u = params[:id] ? usuario_atual.escola.usuarios.find(params[:id]) : usuario_atual
         posts = u.posts.joins(:grupo).where(grupos: { escola_id: u.escola_id })
         render json: {
-          usuario: u.as_json_publico.merge(capa_cor: u.try(:capa_cor)),
+          usuario: u.as_json_publico.merge(capa_cor: u.try(:capa_cor), capa_url: u.try(:capa_url)),
           escola: u.escola.nome,
           sou_eu: u.id == usuario_atual.id,
           eu_sigo: usuario_atual.segue?(u),
@@ -25,7 +25,7 @@ module Api
       end
 
       def update
-        usuario_atual.update!(params.permit(:status_icone, :avatar_cor, :capa_cor, :bio, :nome_completo))
+        usuario_atual.update!(params.permit(:status_icone, :avatar_cor, :capa_cor, :bio, :nome_completo, :foto_url, :capa_url))
         render json: usuario_atual.as_json_publico
       end
     end

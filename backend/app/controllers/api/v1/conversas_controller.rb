@@ -38,7 +38,7 @@ module Api
         render json: {
           com: c.outro(usuario_atual).as_json_publico,
           mensagens: msgs.map { |m|
-            { id: m.id, texto: m.texto, minha: m.remetente_id == usuario_atual.id,
+            { id: m.id, texto: m.texto, imagem_url: m.imagem_url, minha: m.remetente_id == usuario_atual.id,
               autor: m.remetente.apelido, tempo: PostsController.tempo_rel(m.created_at),
               created_at: m.created_at.iso8601 }
           }
@@ -48,8 +48,8 @@ module Api
       # POST /api/v1/conversas/:id/mensagens { texto }
       def enviar
         c = conversa_do_usuario
-        m = c.mensagens.create!(remetente: usuario_atual, texto: params[:texto])
-        render json: { id: m.id, texto: m.texto, minha: true, tempo: "agora", created_at: m.created_at.iso8601 }, status: :created
+        m = c.mensagens.create!(remetente: usuario_atual, texto: params[:texto].to_s, imagem_url: params[:imagem_url])
+        render json: { id: m.id, texto: m.texto, imagem_url: m.imagem_url, minha: true, tempo: "agora", created_at: m.created_at.iso8601 }, status: :created
       end
 
       private

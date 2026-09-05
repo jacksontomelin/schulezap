@@ -29,6 +29,13 @@ Rails.application.routes.draw do
       get  "ranking",                     to: "ranking#index"
       get  "notificacoes",                to: "notificacoes#index"
 
+      patch "posts/:id",          to: "posts#update"
+      get   "posts/:id/curtidas", to: "posts#curtidas"
+      post  "enquetes/:id/votar", to: "enquetes#votar"
+      get   "descobrir",          to: "descobrir#index"
+      get   "usuarios/:id/seguidores", to: "descobrir#seguidores"
+      get   "usuarios/:id/seguindo",   to: "descobrir#seguindo"
+
       # stories
       get    "stories",           to: "stories#index"
       post   "stories",           to: "stories#create"

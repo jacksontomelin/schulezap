@@ -209,3 +209,40 @@ CREATE TABLE visualizacoes_story (
   updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
 CREATE UNIQUE INDEX idx_visualizacoes_story_uniq ON visualizacoes_story(story_id, usuario_id);
+
+-- migration 11: social completo
+ALTER TABLE usuarios ADD COLUMN foto_url TEXT;
+ALTER TABLE usuarios ADD COLUMN capa_url TEXT;
+ALTER TABLE posts ADD COLUMN imagens TEXT;
+ALTER TABLE posts ADD COLUMN editado_em TIMESTAMP;
+ALTER TABLE mensagens ADD COLUMN imagem_url TEXT;
+
+CREATE TABLE enquetes (
+  id BIGSERIAL PRIMARY KEY, post_id BIGINT NOT NULL REFERENCES posts(id),
+  pergunta VARCHAR NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT now(), updated_at TIMESTAMP NOT NULL DEFAULT now());
+CREATE TABLE opcoes_enquete (
+  id BIGSERIAL PRIMARY KEY, enquete_id BIGINT NOT NULL REFERENCES enquetes(id),
+  texto VARCHAR NOT NULL, ordem INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT now(), updated_at TIMESTAMP NOT NULL DEFAULT now());
+CREATE TABLE votos_enquete (
+  id BIGSERIAL PRIMARY KEY, opcao_id BIGINT NOT NULL REFERENCES opcoes_enquete(id),
+  usuario_id BIGINT NOT NULL REFERENCES usuarios(id), enquete_id BIGINT NOT NULL REFERENCES enquetes(id),
+  created_at TIMESTAMP NOT NULL DEFAULT now(), updated_at TIMESTAMP NOT NULL DEFAULT now());
+CREATE UNIQUE INDEX idx_votos_uniq ON votos_enquete(enquete_id, usuario_id);
+
+CREATE TABLE mencoes (
+  id BIGSERIAL PRIMARY KEY, usuario_id BIGINT NOT NULL REFERENCES usuarios(id),
+  autor_id BIGINT NOT NULL REFERENCES usuarios(id),
+  post_id BIGINT REFERENCES posts(id), comentario_id BIGINT REFERENCES comentarios(id),
+  created_at TIMESTAMP NOT NULL DEFAULT now(), updated_at TIMESTAMP NOT NULL DEFAULT now());
+CREATE INDEX idx_mencoes_usuario ON mencoes(usuario_id, created_at);
+
+CREATE TABLE hashtags (
+  id BIGSERIAL PRIMARY KEY, nome VARCHAR NOT NULL, usos INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT now(), updated_at TIMESTAMP NOT NULL DEFAULT now());
+CREATE UNIQUE INDEX idx_hashtags_nome ON hashtags(nome);
+CREATE TABLE hashtags_posts (
+  id BIGSERIAL PRIMARY KEY, hashtag_id BIGINT NOT NULL REFERENCES hashtags(id),
+  post_id BIGINT NOT NULL REFERENCES posts(id));
+CREATE UNIQUE INDEX idx_hashtags_posts_uniq ON hashtags_posts(hashtag_id, post_id);
