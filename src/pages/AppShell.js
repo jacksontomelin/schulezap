@@ -135,6 +135,7 @@ export default function AppShell() {
             <img src="/logo.png" alt="" className="app-top-logo" />
             <Wordmark size={21} />
           </div>
+          <CartaoAluno usuario={usuario} aoTocar={() => { setTab('perfil'); setPainel(null); }} />
           <div className="app-top-icons">
             <button className={`app-icon-btn ${painel === 'busca' ? 'is-on' : ''}`} aria-label="Buscar" onClick={() => setPainel(painel === 'busca' ? null : 'busca')}>
               <Icon name="search" size={22} />
@@ -153,6 +154,8 @@ export default function AppShell() {
               ['feed', 'home', 'Mural'],
               ['grupos', 'users', 'Grupos'],
               ['jogos', 'gamepad', 'Desafios'],
+              ['avisos', 'bell', 'Avisos'],
+              ['boletim', 'book', 'Boletim'],
               ['descobrir', 'search', 'Descobrir'],
               ['conversas', 'chat', 'Mensagens'],
               ['ranking', 'trophy', 'Ranking'],
@@ -172,6 +175,8 @@ export default function AppShell() {
             {tab === 'feed' && <Feed usuario={usuario} showToast={showToast} temaInicial={postarTema} limparTema={() => setPostarTema('')} abrirPerfil={abrirPerfil} />}
             {tab === 'grupos' && <Grupos showToast={showToast} />}
             {tab === 'jogos' && <Jogos showToast={showToast} usuario={usuario} setUsuario={setUsuario} irPostar={irPostar} />}
+            {tab === 'avisos' && <Avisos usuario={usuario} showToast={showToast} />}
+            {tab === 'boletim' && <Boletim showToast={showToast} />}
             {tab === 'descobrir' && <Descobrir abrirPerfil={abrirPerfil} showToast={showToast} verHashtag={(t) => { setTab('feed'); showToast(`Mostrando #${t}`); }} />}
             {tab === 'ranking' && <Ranking usuario={usuario} abrirPerfil={abrirPerfil} />}
             {tab === 'perfil' && <Perfil usuario={usuario} setUsuario={setUsuario} onLogout={sair} showToast={showToast} />}
@@ -180,6 +185,12 @@ export default function AppShell() {
             {tab === 'chat' && <Chat conversaId={conversaId} usuario={usuario} showToast={showToast} voltar={() => setTab('conversas')} />}
             {tab === 'moderar' && ehModerador && <Moderar showToast={showToast} />}
           </main>
+
+          <aside className="app-widgets">
+            <WidgetEscola usuario={usuario} />
+            <WidgetAvisos irParaAvisos={() => { setTab('avisos'); setPainel(null); }} />
+            <WidgetAgenda />
+          </aside>
         </div>
 
         {toast && <div className="app-toast"><Icon name="check" size={16} stroke={3} />{toast}</div>}
@@ -1535,5 +1546,227 @@ function TextoRico({ texto, aoTocarTag }) {
         return <span key={i}>{t}</span>;
       })}
     </p>
+  );
+}
+
+/* ===================== AVISOS DA ESCOLA ===================== */
+const DEMO_AVISOS = [
+  { id: 1, titulo: 'Reunião de Pais e Alunos — 3º Trimestre', corpo: 'Convocamos os responsáveis pelos alunos do Ensino Fundamental II para o encontro no auditório na próxima quinta-feira às 19h.', categoria: 'reuniao', fixado: true, autor: { apelido: 'Coordenação', avatar_inicial: 'C' }, tempo: '2 h', lido: false },
+  { id: 2, titulo: 'Preparativos para a Osterfest Escolar 2026', corpo: 'Lembramos todas as turmas do 6º ao 9º ano que as inscrições para as oficinas de pintura de casquinhas (Ostereier) encerram nesta sexta-feira!', categoria: 'evento', fixado: false, autor: { apelido: 'Coordenação', avatar_inicial: 'C' }, tempo: '1 d', lido: true },
+  { id: 3, titulo: 'Inscrições para a Rota do Enxaimel de Ciclismo Escolar', corpo: 'Garanta sua camiseta oficial do evento no departamento de Educação Física.', categoria: 'esporte', fixado: false, autor: { apelido: 'Prof. Klaus', avatar_inicial: 'K' }, tempo: '3 d', lido: true },
+];
+const CAT_AVISO = {
+  geral:   { icone: 'flag',   tone: 'gold',  rotulo: 'Geral' },
+  evento:  { icone: 'star',   tone: 'red',   rotulo: 'Evento' },
+  reuniao: { icone: 'users',  tone: 'blue',  rotulo: 'Reunião' },
+  esporte: { icone: 'ball',   tone: 'green', rotulo: 'Esporte' },
+  prova:   { icone: 'book',   tone: 'red',   rotulo: 'Prova' },
+};
+
+function Avisos({ usuario, showToast }) {
+  const [lista, setLista] = useState(API_ATIVA ? null : DEMO_AVISOS);
+  const [criando, setCriando] = useState(false);
+  const [form, setForm] = useState({ titulo: '', corpo: '', categoria: 'geral', turma_alvo: '', fixado: false });
+  const ehMod = usuario.papel === 'responsavel' || usuario.papel === 'admin';
+
+  const carregar = useCallback(async () => {
+    if (!API_ATIVA) return;
+    try { setLista(await api.avisos()); } catch (e) { showToast(e.message); setLista([]); }
+  }, [showToast]);
+  useEffect(() => { carregar(); }, [carregar]);
+
+  const publicar = async () => {
+    if (!form.titulo.trim() || !form.corpo.trim()) { showToast('Preencha título e mensagem'); return; }
+    if (!API_ATIVA) {
+      setLista((l) => [{ id: Date.now(), ...form, autor: { apelido: usuario.apelido, avatar_inicial: usuario.avatar_inicial }, tempo: 'agora', lido: true }, ...l]);
+    } else {
+      try { await api.criarAviso(form); await carregar(); } catch (e) { showToast(e.message); return; }
+    }
+    setForm({ titulo: '', corpo: '', categoria: 'geral', turma_alvo: '', fixado: false });
+    setCriando(false); showToast('Aviso publicado');
+  };
+
+  const marcarLido = async (a) => {
+    if (a.lido) return;
+    setLista((l) => l.map((x) => x.id === a.id ? { ...x, lido: true } : x));
+    if (API_ATIVA) { try { await api.lerAviso(a.id); } catch (e) { /* silencioso */ } }
+  };
+
+  return (
+    <div className="pad">
+      <div className="jogos-head">
+        <div><h2 className="h2">Avisos da escola</h2><p className="sub" style={{ margin: 0 }}>Comunicados oficiais da coordenação.</p></div>
+        {ehMod && <button className="btn btn-gold btn-sm" onClick={() => setCriando(!criando)}><Icon name="plus" size={16} stroke={2.5} /> Novo</button>}
+      </div>
+
+      {criando && (
+        <div className="criar-grupo">
+          <input className="input" placeholder="Título do aviso" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} style={{ marginBottom: 8 }} />
+          <textarea className="composer-input" rows={3} placeholder="Mensagem" value={form.corpo} onChange={(e) => setForm({ ...form, corpo: e.target.value })} />
+          <p className="label" style={{ margin: '12px 0 8px' }}>Categoria</p>
+          <div className="cat-grid">
+            {Object.entries(CAT_AVISO).map(([k, v]) => (
+              <button key={k} className={`cat-btn ${form.categoria === k ? 'is-on' : ''}`} onClick={() => setForm({ ...form, categoria: k })}>
+                <Icon name={v.icone} size={16} /> {v.rotulo}
+              </button>
+            ))}
+          </div>
+          <input className="input" placeholder="Turma (vazio = todas)" value={form.turma_alvo} onChange={(e) => setForm({ ...form, turma_alvo: e.target.value })} style={{ marginTop: 10 }} />
+          <label className="fixar-check"><input type="checkbox" checked={form.fixado} onChange={(e) => setForm({ ...form, fixado: e.target.checked })} /> Fixar no topo</label>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+            <button className="btn btn-red btn-sm" onClick={publicar}><Icon name="send" size={15} /> Publicar</button>
+            <button className="btn btn-ghost btn-sm" onClick={() => setCriando(false)}>Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      {lista === null && <p className="feed-end">Carregando…</p>}
+      {lista && lista.length === 0 && <div className="mod-empty"><Icon name="check" size={22} /> Nenhum aviso no momento.</div>}
+      {lista && lista.map((a) => {
+        const cat = CAT_AVISO[a.categoria] || CAT_AVISO.geral;
+        return (
+          <article key={a.id} className={`aviso ${a.lido ? '' : 'nao-lido'}`} onClick={() => marcarLido(a)}>
+            <div className="aviso-topo">
+              <Tile icon={cat.icone} tone={cat.tone} size={40} radius={12} />
+              <div className="aviso-meta">
+                <div className="aviso-tags">
+                  <span className={`aviso-cat cat-${a.categoria}`}>{cat.rotulo}</span>
+                  {a.fixado && <span className="aviso-fix"><Icon name="star" size={11} style={{ fill: 'currentColor' }} /> Fixado</span>}
+                  {a.turma_alvo && <span className="aviso-turma">{a.turma_alvo}</span>}
+                  {!a.lido && <span className="aviso-novo">novo</span>}
+                </div>
+                <h3>{a.titulo}</h3>
+                <span className="aviso-autor">{a.autor?.apelido} · {a.tempo}</span>
+              </div>
+            </div>
+            <p className="aviso-corpo">{a.corpo}</p>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ===================== BOLETIM ===================== */
+const DEMO_BOLETIM = {
+  aluno: { apelido: 'Marco', avatar_inicial: 'M', turma: '8º Ano A' },
+  ano_letivo: '2026', media_geral: 8.4,
+  materias: [
+    { disciplina: 'Alemão', icone: 'language', media: 9.5, situacao: 'Excelente', bimestres: [{ bimestre: 1, valor: 9.0 }, { bimestre: 2, valor: 9.5 }, { bimestre: 3, valor: 10.0 }] },
+    { disciplina: 'Ciências', icone: 'bulb', media: 8.8, situacao: 'Bom desempenho', bimestres: [{ bimestre: 1, valor: 8.5 }, { bimestre: 2, valor: 9.0 }, { bimestre: 3, valor: 9.0 }] },
+    { disciplina: 'História SC', icone: 'book', media: 10.0, situacao: 'Excelente', bimestres: [{ bimestre: 1, valor: 10.0 }, { bimestre: 2, valor: 10.0 }] },
+    { disciplina: 'Matemática', icone: 'grid', media: 8.0, situacao: 'Acima da média', bimestres: [{ bimestre: 1, valor: 7.5 }, { bimestre: 2, valor: 8.0 }, { bimestre: 3, valor: 8.5 }] },
+  ],
+};
+
+function Boletim({ showToast }) {
+  const [dados, setDados] = useState(API_ATIVA ? null : DEMO_BOLETIM);
+  useEffect(() => { if (API_ATIVA) api.boletim().then(setDados).catch(() => setDados({ materias: [], media_geral: null })); }, []);
+
+  if (!dados) return <p className="feed-end">Carregando boletim…</p>;
+  const corNota = (v) => v >= 9 ? 'nota-otima' : v >= 7 ? 'nota-boa' : v >= 6 ? 'nota-media' : 'nota-baixa';
+
+  return (
+    <div className="pad">
+      <h2 className="h2">Boletim</h2>
+      <p className="sub">Ano letivo {dados.ano_letivo || new Date().getFullYear()}</p>
+
+      {dados.media_geral != null && (
+        <div className="boletim-geral fachwerk">
+          <div><span>Média geral</span><strong>{dados.media_geral}</strong></div>
+          <div className="boletim-geral-txt">
+            <Icon name="trophy" size={26} />
+            <p>{dados.media_geral >= 9 ? 'Excelente!' : dados.media_geral >= 7 ? 'Bom desempenho' : 'Continue se esforçando'}</p>
+          </div>
+        </div>
+      )}
+
+      {dados.materias.length === 0 && <p className="coments-empty">Nenhuma nota lançada ainda.</p>}
+      {dados.materias.map((m) => (
+        <div key={m.disciplina} className="materia">
+          <Tile icon={m.icone || 'book'} tone="blue" size={42} radius={12} />
+          <div className="materia-body">
+            <strong>{m.disciplina}</strong>
+            <span>{m.situacao}</span>
+            <div className="materia-bims">
+              {m.bimestres.map((b) => <span key={b.bimestre} className="bim">{b.bimestre}º <b>{b.valor.toFixed(1)}</b></span>)}
+            </div>
+          </div>
+          <div className={`materia-media ${corNota(m.media)}`}>{m.media.toFixed(1)}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ===================== WIDGETS DA COLUNA LATERAL ===================== */
+const DEMO_AGENDA = [
+  { id: 1, titulo: 'Prova de História Regional', tipo: 'prova', dia: 8, mes: 'set', disciplina: 'História SC' },
+  { id: 2, titulo: 'Torneio Interescolar de Vôlei', tipo: 'evento', dia: 11, mes: 'set' },
+  { id: 3, titulo: 'Entrega: maquete enxaimel', tipo: 'tarefa', dia: 14, mes: 'set', disciplina: 'Artes' },
+];
+
+function WidgetAgenda() {
+  const [itens, setItens] = useState(API_ATIVA ? null : DEMO_AGENDA);
+  useEffect(() => { if (API_ATIVA) api.agenda().then(setItens).catch(() => setItens([])); }, []);
+  const cor = { prova: 'red', evento: 'gold', tarefa: 'blue' };
+  return (
+    <section className="widget">
+      <h3 className="widget-titulo"><Icon name="book" size={16} /> Agenda</h3>
+      {itens === null && <p className="widget-vazio">Carregando…</p>}
+      {itens && itens.length === 0 && <p className="widget-vazio">Nada marcado por enquanto.</p>}
+      {itens && itens.map((a) => (
+        <div key={a.id} className="agenda-item">
+          <div className={`agenda-data tone-${cor[a.tipo] || 'blue'}`}><strong>{a.dia}</strong><span>{a.mes}</span></div>
+          <div className="agenda-txt"><strong>{a.titulo}</strong><span>{a.disciplina || a.tipo}</span></div>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function WidgetAvisos({ irParaAvisos }) {
+  const [itens, setItens] = useState(API_ATIVA ? null : DEMO_AVISOS.slice(0, 2));
+  useEffect(() => { if (API_ATIVA) api.avisos().then((l) => setItens(l.slice(0, 2))).catch(() => setItens([])); }, []);
+  return (
+    <section className="widget">
+      <h3 className="widget-titulo"><Icon name="bell" size={16} /> Avisos</h3>
+      {itens === null && <p className="widget-vazio">Carregando…</p>}
+      {itens && itens.length === 0 && <p className="widget-vazio">Sem avisos novos.</p>}
+      {itens && itens.map((a) => (
+        <button key={a.id} className="widget-aviso" onClick={irParaAvisos}>
+          <strong>{a.titulo}</strong>
+          <span>{a.tempo}</span>
+        </button>
+      ))}
+      <button className="btn btn-ghost btn-sm btn-block" style={{ marginTop: 8 }} onClick={irParaAvisos}>Ver todos</button>
+    </section>
+  );
+}
+
+function WidgetEscola({ usuario }) {
+  return (
+    <section className="widget widget-escola fachwerk">
+      <h3 className="widget-titulo"><Icon name="school" size={16} /> Sua escola</h3>
+      <p className="widget-escola-nome">Escola Doutor Blumenau</p>
+      <p className="widget-escola-cidade">Pomerode, SC · Nossa Pequena Alemanha</p>
+      <div className="widget-escola-stats">
+        <div><strong>{usuario.pontos ?? 0}</strong><span>seus pontos</span></div>
+        <div><strong>{usuario.turma || '—'}</strong><span>sua turma</span></div>
+      </div>
+    </section>
+  );
+}
+
+/* ===================== CARTÃO DO ALUNO (header) ===================== */
+function CartaoAluno({ usuario, aoTocar }) {
+  return (
+    <button className="cartao-aluno" onClick={aoTocar}>
+      <Avatar initial={usuario.avatar_inicial} foto={usuario.foto_url} size={40} badgeIcon={usuario.status_icone} />
+      <div>
+        <strong>{usuario.apelido}</strong>
+        <span>{usuario.turma || 'Aluno'} · Doutor Blumenau</span>
+      </div>
+    </button>
   );
 }

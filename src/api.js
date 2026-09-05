@@ -74,6 +74,16 @@ export const api = {
   sairGrupo: (id) => req(`/grupos/${id}/sair`, { method: "POST" }),
   criarGrupo: (nome, icone, cor_tema) => req("/grupos", { method: "POST", body: { nome, icone, cor_tema } }),
 
+  // escola
+  avisos: () => req("/avisos"),
+  criarAviso: (dados) => req("/avisos", { method: "POST", body: dados }),
+  lerAviso: (id) => req(`/avisos/${id}/lido`, { method: "POST" }),
+  apagarAviso: (id) => req(`/avisos/${id}`, { method: "DELETE" }),
+  boletim: (usuarioId) => req(usuarioId ? `/boletim?usuario_id=${usuarioId}` : "/boletim"),
+  lancarNota: (dados) => req("/boletim/notas", { method: "POST", body: dados }),
+  agenda: () => req("/agenda"),
+  criarAgenda: (dados) => req("/agenda", { method: "POST", body: dados }),
+
   // stories
   stories: () => req("/stories"),
   criarStory: (imagem_url, texto, cor_fundo) => req("/stories", { method: "POST", body: { imagem_url, texto, cor_fundo } }),

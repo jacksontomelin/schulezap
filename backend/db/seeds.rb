@@ -73,6 +73,39 @@ if Story.ativos.empty?
   lucas.stories.create!(texto: "Servidor novo no ar 🎮", cor_fundo: "#5B8C2A")
 end
 
+# --- turma dos alunos ---
+marco.update(turma: "8º Ano A") if marco.turma.blank?
+bel.update(turma: "8º Ano A") if bel.turma.blank?
+lucas.update(turma: "8º Ano B") if lucas.turma.blank?
+
+# --- avisos da escola ---
+if escola.avisos.empty?
+  escola.avisos.create!(autor: diretora, titulo: "Reunião de Pais e Alunos — 3º Trimestre",
+    corpo: "Convocamos os responsáveis pelos alunos do Ensino Fundamental II para o encontro no auditório na próxima quinta-feira às 19h.",
+    categoria: "reuniao", fixado: true)
+  escola.avisos.create!(autor: diretora, titulo: "Preparativos para a Osterfest Escolar",
+    corpo: "As inscrições para as oficinas de pintura de casquinhas (Ostereier) encerram nesta sexta-feira!",
+    categoria: "evento")
+  escola.avisos.create!(autor: diretora, titulo: "Rota do Enxaimel — Ciclismo Escolar",
+    corpo: "Garanta sua camiseta oficial no departamento de Educação Física.", categoria: "esporte")
+end
+
+# --- boletim de exemplo ---
+if Nota.where(usuario: marco).empty?
+  { "Alemão" => ["language", [9.0, 9.5, 10.0]], "Matemática" => ["grid", [7.5, 8.0, 8.5]],
+    "História SC" => ["book", [10.0, 10.0]], "Ciências" => ["bulb", [8.5, 9.0, 9.0]] }.each do |nome, (icone, vals)|
+    d = escola.disciplinas.find_or_create_by!(nome: nome) { |x| x.icone = icone }
+    vals.each_with_index { |v, i| Nota.find_or_create_by!(usuario: marco, disciplina: d, bimestre: i + 1, ano_letivo: Date.current.year.to_s) { |n| n.valor = v; n.lancada_por = diretora } }
+  end
+end
+
+# --- agenda ---
+if escola.agendas.empty?
+  escola.agendas.create!(titulo: "Prova de História Regional", tipo: "prova", data: Date.current + 3, turma_alvo: "8º Ano A")
+  escola.agendas.create!(titulo: "Torneio Interescolar de Vôlei", tipo: "evento", data: Date.current + 6)
+  escola.agendas.create!(titulo: "Entrega: maquete enxaimel", tipo: "tarefa", data: Date.current + 9)
+end
+
 puts "Pronto!"
 puts "  Escola: #{escola.nome}"
 puts "  Login aluno:  Marco / 123456"
