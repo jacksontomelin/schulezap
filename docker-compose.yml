@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  schulezap:
+    build: .
+    image: schulezap:latest
+    container_name: schulezap
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.schulezap.rule=Host(`schulezap.com.br`)"
+      - "traefik.http.routers.schulezap.entrypoints=websecure"
+      - "traefik.http.routers.schulezap.tls.certresolver=letsencrypt"

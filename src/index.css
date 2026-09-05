@@ -1,0 +1,80 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gold: #F7B500;
+  --gold-deep: #E89B00;
+  --gold-soft: #FCD34D;
+  --gold-pale: #FFF8E7;
+  --red: #C62828;
+  --red-deep: #8E1B1B;
+  --red-soft: #F8D7D3;
+  --blue: #2E86C1;
+  --ink: #3A2A0C;
+  --ink-soft: #8A7A55;
+  --line: #F0DFA8;
+  --cream: #FFF8E7;
+  --white: #FFFFFF;
+  --font-display: 'Baloo 2', cursive;
+  --font-body: 'Nunito', system-ui, sans-serif;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--cream);
+  color: var(--ink);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+button { cursor: pointer; font-family: inherit; border: none; }
+a { text-decoration: none; color: inherit; }
+img { max-width: 100%; display: block; }
+
+.btn-primary {
+  background: linear-gradient(180deg, #ED3B2F, #C62828);
+  color: #fff;
+  font-weight: 800;
+  border-radius: var(--radius-sm);
+  padding: 13px 28px;
+  font-size: 15px;
+  box-shadow: 0 4px 0 #8E1B1B, inset 0 1px 0 rgba(255,255,255,.3);
+  transition: transform .08s, filter .15s;
+  font-family: var(--font-body);
+  display: inline-block;
+}
+.btn-primary:hover { filter: brightness(1.06); }
+.btn-primary:active { transform: translateY(2px); box-shadow: 0 2px 0 #8E1B1B; }
+
+.btn-gold {
+  background: linear-gradient(180deg, #FCD34D, #F7B500);
+  color: #7a4d00;
+  font-weight: 800;
+  border-radius: var(--radius-sm);
+  padding: 13px 28px;
+  font-size: 15px;
+  box-shadow: 0 4px 0 #E89B00, inset 0 1px 0 rgba(255,255,255,.5);
+  transition: transform .08s, filter .15s;
+  font-family: var(--font-body);
+  display: inline-block;
+}
+.btn-gold:hover { filter: brightness(1.05); }
+.btn-gold:active { transform: translateY(2px); box-shadow: 0 2px 0 #E89B00; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pop {
+  0%   { transform: scale(.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
