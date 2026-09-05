@@ -3,12 +3,14 @@ module Api
     class AgendaController < ApplicationController
       before_action :autenticar!
 
+      MESES = %w[_ jan fev mar abr mai jun jul ago set out nov dez].freeze
+
       # GET /api/v1/agenda — próximos compromissos da turma
       def index
         itens = usuario_atual.escola.agendas.para(usuario_atual).proximas.includes(:disciplina).limit(12)
         render json: itens.map { |a|
           { id: a.id, titulo: a.titulo, descricao: a.descricao, tipo: a.tipo,
-            data: a.data.iso8601, dia: a.data.day, mes: I18n.l(a.data, format: "%b") rescue a.data.strftime("%b"),
+            data: a.data.iso8601, dia: a.data.day, mes: MESES[a.data.month],
             disciplina: a.disciplina&.nome }
         }
       end

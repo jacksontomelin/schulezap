@@ -13,6 +13,10 @@ RUN bundle install --jobs 4 --retry 3
 
 COPY . .
 
+# checagem de sintaxe: se algum .rb estiver quebrado, o BUILD falha
+# (melhor falhar aqui do que o container nao subir em producao)
+RUN set -e; for f in $(find app config db lib -name "*.rb"); do ruby -c "$f" > /dev/null; done && echo "sintaxe OK"
+
 ENV RAILS_ENV=production
 ENV RAILS_LOG_TO_STDOUT=true
 ENV RAILS_SERVE_STATIC_FILES=true
