@@ -6,9 +6,11 @@ export const AVATAR_COLORS = {
   M: '#C62828', L: '#2E86C1', B: '#E89B00', T: '#5B8C2A', H: '#8E44AD', A: '#1B5E8E', P: '#0F6E56',
 };
 
-export function Avatar({ initial, size = 40, ring, badge, badgeIcon }) {
+export function Avatar({ initial, size = 40, ring, badge, badgeIcon, foto }) {
   const bg = AVATAR_COLORS[initial] || '#6B5A36';
-  const inner = (
+  const inner = foto ? (
+    <img src={foto} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', display: 'block', border: ring ? '2px solid #fff' : 'none' }} />
+  ) : (
     <div style={{ width: size, height: size, borderRadius: '50%', background: bg, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: size * 0.4, border: ring ? '2px solid #fff' : 'none' }}>
       {initial}
     </div>

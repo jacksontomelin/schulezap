@@ -54,7 +54,10 @@ export const api = {
     const qs = q.toString();
     return req(qs ? `/feed?${qs}` : "/feed");
   },
-  criarPost: (grupo_id, texto, imagem_url) => req("/posts", { method: "POST", body: { grupo_id, texto, imagem_url } }),
+  criarPost: (grupo_id, texto, imagens, enquete) => req("/posts", { method: "POST", body: { grupo_id, texto, imagens, enquete } }),
+  editarPost: (id, texto) => req(`/posts/${id}`, { method: "PATCH", body: { texto } }),
+  curtidasDo: (id) => req(`/posts/${id}/curtidas`),
+  votar: (enqueteId, opcao_id) => req(`/enquetes/${enqueteId}/votar`, { method: "POST", body: { opcao_id } }),
   removerPost: (id) => req(`/posts/${id}`, { method: "DELETE" }),
   reagir: (id, tipo) => req(`/posts/${id}/reagir`, { method: "POST", body: { tipo } }),
   salvar: (id) => req(`/posts/${id}/salvar`, { method: "POST" }),
@@ -81,7 +84,7 @@ export const api = {
   conversas: () => req("/conversas"),
   abrirConversa: (usuario_id) => req("/conversas", { method: "POST", body: { usuario_id } }),
   mensagens: (id) => req(`/conversas/${id}/mensagens`),
-  enviarMensagem: (id, texto) => req(`/conversas/${id}/mensagens`, { method: "POST", body: { texto } }),
+  enviarMensagem: (id, texto, imagem_url) => req(`/conversas/${id}/mensagens`, { method: "POST", body: { texto, imagem_url } }),
 
   // desafios, ranking, notificacoes
   desafioResultado: (desafio, acertos, total) =>
@@ -94,6 +97,9 @@ export const api = {
   perfil: (id) => req(id ? `/perfil/${id}` : "/perfil"),
   seguir: (id) => req(`/usuarios/${id}/seguir`, { method: "POST" }),
   buscar: (q) => req(`/busca?q=${encodeURIComponent(q)}`),
+  descobrir: () => req("/descobrir"),
+  seguidoresDe: (id) => req(`/usuarios/${id}/seguidores`),
+  seguindoDe: (id) => req(`/usuarios/${id}/seguindo`),
   atualizarPerfil: (dados) => req("/perfil", { method: "PATCH", body: dados }),
 
   // admin

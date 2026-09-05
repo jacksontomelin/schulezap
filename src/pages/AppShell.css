@@ -446,3 +446,71 @@
 .grade-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .grade-item span { position: absolute; bottom: 4px; left: 4px; display: inline-flex; align-items: center; gap: 3px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
 .mini-post img { cursor: pointer; }
+
+/* ============ GALERIA DE FOTOS NO POST ============ */
+.galeria { display: grid; gap: 3px; border-radius: 14px; overflow: hidden; margin-bottom: 10px; border: 2px solid var(--line); }
+.galeria.g2 { grid-template-columns: 1fr 1fr; }
+.galeria.g3 { grid-template-columns: 1fr 1fr; }
+.galeria.g3 .galeria-item:first-child { grid-row: span 2; }
+.galeria.g4 { grid-template-columns: 1fr 1fr; }
+.galeria-item { position: relative; border: none; padding: 0; background: var(--cream); cursor: pointer; aspect-ratio: 1; }
+.galeria.g3 .galeria-item:first-child { aspect-ratio: auto; }
+.galeria-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.galeria-mais { position: absolute; inset: 0; background: rgba(43,29,6,.6); color: #fff; font-size: 26px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+
+/* composer: várias fotos + enquete */
+.composer-fotos { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.composer-foto { position: relative; width: 74px; height: 74px; border-radius: 10px; overflow: hidden; border: 2px solid var(--line); }
+.composer-foto img { width: 100%; height: 100%; object-fit: cover; }
+.composer-foto button { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border-radius: 50%; background: rgba(43,29,6,.8); color: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.composer-enquete { background: var(--cream); border: 2px solid var(--line); border-radius: 12px; padding: 10px; margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.composer-enquete-head { display: flex; align-items: center; gap: 6px; font-weight: 900; font-size: 13px; color: var(--ink); }
+.composer-enquete-head button { margin-left: auto; background: none; border: none; cursor: pointer; color: var(--ink-3); display: flex; }
+.composer-enquete .input { height: 38px; font-size: 14px; }
+
+/* ============ ENQUETE ============ */
+.enquete { background: var(--cream); border: 2px solid var(--line); border-radius: 14px; padding: 12px; margin-bottom: 10px; }
+.enquete-pergunta { display: flex; align-items: center; gap: 6px; font-weight: 900; font-size: 14.5px; color: var(--ink); margin-bottom: 10px; }
+.enquete-opcao { position: relative; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #fff; border: 2px solid var(--line-2); border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; font-family: var(--font); font-weight: 800; font-size: 14px; color: var(--ink); cursor: pointer; overflow: hidden; }
+.enquete-opcao:disabled { cursor: default; }
+.enquete-opcao.is-minha { border-color: var(--red); }
+.enquete-barra { position: absolute; left: 0; top: 0; bottom: 0; background: var(--gold-light); transition: width .4s ease; }
+.enquete-texto { position: relative; display: inline-flex; align-items: center; gap: 6px; }
+.enquete-pct { position: relative; font-weight: 900; color: var(--red); }
+.enquete-total { font-size: 12px; font-weight: 700; color: var(--ink-3); margin-top: 4px; }
+
+/* ============ TEXTO RICO: menções e hashtags ============ */
+.mencao { color: var(--blue-text); font-weight: 900; }
+.hashtag { background: none; border: none; padding: 0; font: inherit; color: var(--red); font-weight: 900; cursor: pointer; }
+.hashtag:hover { text-decoration: underline; }
+.post-editado { font-size: 11px; font-weight: 700; color: var(--ink-3); margin-left: 4px; }
+.edit-post { margin-bottom: 10px; }
+.tag-ativa { display: flex; align-items: center; justify-content: space-between; background: var(--gold-light); padding: 10px 16px; border-bottom: 2px solid var(--line); }
+.tag-ativa span { font-weight: 900; color: var(--gold-text); font-size: 15px; }
+.tag-ativa button { display: inline-flex; align-items: center; gap: 4px; background: none; border: none; font-family: var(--font); font-weight: 800; font-size: 12.5px; color: var(--ink-3); cursor: pointer; }
+
+/* ============ QUEM CURTIU / LISTAS ============ */
+.post-resumo-btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: none; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+.post-resumo-btn:hover { text-decoration: underline; }
+.curtiu-linha { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: none; border-top: 1px solid var(--line); padding: 10px 2px; font-family: var(--font); cursor: pointer; text-align: left; }
+.curtiu-linha strong { font-size: 14.5px; font-weight: 900; color: var(--ink); }
+.curtiu-emoji { margin-left: auto; font-size: 20px; }
+.lista-bio { font-size: 12.5px; font-weight: 700; color: var(--ink-3); margin: 0; }
+
+/* ============ DESCOBRIR ============ */
+.tags-alta { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--gold-light); border: 2px solid var(--gold); border-radius: 999px; padding: 8px 14px; font-family: var(--font); font-weight: 900; font-size: 13.5px; color: var(--gold-text); cursor: pointer; }
+.tag-chip em { font-style: normal; font-size: 11.5px; opacity: .7; }
+.tag-chip:hover { background: var(--gold); color: #4A3000; }
+
+/* ============ PERFIL: foto e capa ============ */
+.trocar-capa { position: absolute; top: 10px; right: 12px; display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.85); border: 2px solid #fff; border-radius: 10px; padding: 6px 10px; font-family: var(--font); font-weight: 800; font-size: 12px; color: var(--ink); cursor: pointer; }
+.profile-hero { position: relative; }
+.trocar-foto { position: absolute; bottom: 0; right: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--red); color: #fff; border: 3px solid #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.stat { border: 2px solid var(--line); font-family: var(--font); }
+
+/* ============ CHAT com foto ============ */
+.bolha-img { width: 100%; max-width: 220px; border-radius: 10px; display: block; margin-bottom: 4px; }
+.chat-previa { position: relative; padding: 8px 16px 0; }
+.chat-previa img { max-height: 90px; border-radius: 10px; border: 2px solid var(--line); }
+.chat-previa button { position: absolute; top: 12px; left: 60px; width: 22px; height: 22px; border-radius: 50%; background: rgba(43,29,6,.8); color: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
