@@ -46,14 +46,16 @@ export const api = {
 
   // feed
   feed: (grupoId) => req(grupoId ? `/feed?grupo_id=${grupoId}` : "/feed"),
-  criarPost: (grupo_id, texto) => req("/posts", { method: "POST", body: { grupo_id, texto } }),
+  criarPost: (grupo_id, texto, imagem_url) => req("/posts", { method: "POST", body: { grupo_id, texto, imagem_url } }),
   removerPost: (id) => req(`/posts/${id}`, { method: "DELETE" }),
-  reagir: (id) => req(`/posts/${id}/reagir`, { method: "POST" }),
+  reagir: (id, tipo) => req(`/posts/${id}/reagir`, { method: "POST", body: { tipo } }),
+  salvar: (id) => req(`/posts/${id}/salvar`, { method: "POST" }),
+  salvos: () => req("/salvos"),
   denunciar: (id, motivo) => req(`/posts/${id}/denunciar`, { method: "POST", body: { motivo } }),
 
   // comentarios
   comentarios: (postId) => req(`/posts/${postId}/comentarios`),
-  comentar: (postId, texto) => req(`/posts/${postId}/comentarios`, { method: "POST", body: { texto } }),
+  comentar: (postId, texto, respondendo_id) => req(`/posts/${postId}/comentarios`, { method: "POST", body: { texto, respondendo_id } }),
 
   // grupos
   grupos: () => req("/grupos"),
@@ -70,6 +72,8 @@ export const api = {
 
   // perfil
   perfil: (id) => req(id ? `/perfil/${id}` : "/perfil"),
+  seguir: (id) => req(`/usuarios/${id}/seguir`, { method: "POST" }),
+  buscar: (q) => req(`/busca?q=${encodeURIComponent(q)}`),
   atualizarPerfil: (dados) => req("/perfil", { method: "PATCH", body: dados }),
 
   // admin

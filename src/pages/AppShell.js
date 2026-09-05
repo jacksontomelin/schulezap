@@ -55,6 +55,15 @@ const PALAVRAS = [
 const TEMAS_DESENHO = ['Uma casa enxaimel', 'Seu animal favorito', 'O time da escola', 'Um robô amigo', 'A rua da sua casa', 'Um super-herói de Pomerode', 'O que você comeu no almoço'];
 const STATUS = ['gamepad', 'ball', 'rocket', 'palette', 'book', 'flame', 'star', 'language'];
 
+const REACOES = [
+  { tipo: 'curtida', emoji: '👍', label: 'Curti' },
+  { tipo: 'amei', emoji: '❤️', label: 'Amei' },
+  { tipo: 'risada', emoji: '😂', label: 'Haha' },
+  { tipo: 'uau', emoji: '😮', label: 'Uau' },
+  { tipo: 'triste', emoji: '😢', label: 'Triste' },
+];
+const emojiDe = (tipo) => (REACOES.find((r) => r.tipo === tipo) || REACOES[0]).emoji;
+
 const diaDoAno = () => Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
 const palavrasDeHoje = () => { const d = diaDoAno(); return [0, 1, 2].map((i) => PALAVRAS[(d + i) % PALAVRAS.length]); };
 const temaDeHoje = () => TEMAS_DESENHO[diaDoAno() % TEMAS_DESENHO.length];
@@ -66,10 +75,12 @@ export default function AppShell() {
   const [usuario, setUsuario] = useState(null);
   const [tab, setTab] = useState('feed');
   const [toast, setToast] = useState(null);
-  const [painel, setPainel] = useState(null); // 'notif' | null
+  const [painel, setPainel] = useState(null); // 'notif' | 'busca' | null
   const [postarTema, setPostarTema] = useState('');
+  const [perfilId, setPerfilId] = useState(null); // ver perfil de outro usuário
 
   const showToast = useCallback((t) => { setToast(t); setTimeout(() => setToast(null), 2000); }, []);
+  const abrirPerfil = useCallback((id) => { setPerfilId(id); setTab('perfil-outro'); setPainel(null); }, []);
 
   useEffect(() => {
     if (API_ATIVA && getToken()) {
@@ -94,6 +105,9 @@ export default function AppShell() {
             <Wordmark size={21} />
           </div>
           <div className="app-top-icons">
+            <button className={`app-icon-btn ${painel === 'busca' ? 'is-on' : ''}`} aria-label="Buscar" onClick={() => setPainel(painel === 'busca' ? null : 'busca')}>
+              <Icon name="search" size={22} />
+            </button>
             <button className={`app-icon-btn ${painel === 'notif' ? 'is-on' : ''}`} aria-label="Notificações" onClick={() => setPainel(painel === 'notif' ? null : 'notif')}>
               <Icon name="bell" size={22} /><span className="app-dot" />
             </button>
@@ -120,11 +134,13 @@ export default function AppShell() {
 
           <main className="app-screen">
             {painel === 'notif' && <Notificacoes fechar={() => setPainel(null)} />}
-            {tab === 'feed' && <Feed usuario={usuario} showToast={showToast} temaInicial={postarTema} limparTema={() => setPostarTema('')} />}
+            {painel === 'busca' && <Busca abrirPerfil={abrirPerfil} irGrupos={() => { setTab('grupos'); setPainel(null); }} fechar={() => setPainel(null)} />}
+            {tab === 'feed' && <Feed usuario={usuario} showToast={showToast} temaInicial={postarTema} limparTema={() => setPostarTema('')} abrirPerfil={abrirPerfil} />}
             {tab === 'grupos' && <Grupos showToast={showToast} />}
             {tab === 'jogos' && <Jogos showToast={showToast} usuario={usuario} setUsuario={setUsuario} irPostar={irPostar} />}
-            {tab === 'ranking' && <Ranking usuario={usuario} />}
-            {tab === 'perfil' && <Perfil usuario={usuario} setUsuario={setUsuario} onLogout={sair} />}
+            {tab === 'ranking' && <Ranking usuario={usuario} abrirPerfil={abrirPerfil} />}
+            {tab === 'perfil' && <Perfil usuario={usuario} setUsuario={setUsuario} onLogout={sair} showToast={showToast} />}
+            {tab === 'perfil-outro' && <PerfilOutro id={perfilId} usuario={usuario} showToast={showToast} voltar={() => setTab('feed')} />}
             {tab === 'moderar' && ehModerador && <Moderar showToast={showToast} />}
           </main>
         </div>
@@ -227,13 +243,15 @@ function Notificacoes({ fechar }) {
 }
 
 /* ===================== FEED ===================== */
-function Feed({ usuario, showToast, temaInicial, limparTema }) {
+function Feed({ usuario, showToast, temaInicial, limparTema, abrirPerfil }) {
   const [posts, setPosts] = useState(API_ATIVA ? [] : DEMO_POSTS);
   const [draft, setDraft] = useState('');
+  const [imagem, setImagem] = useState(null);
   const [carregando, setCarregando] = useState(API_ATIVA);
   const [enviando, setEnviando] = useState(false);
-  const [aberto, setAberto] = useState(null);   // post com comentários abertos
-  const [menu, setMenu] = useState(null);       // post com menu "..." aberto
+  const [aberto, setAberto] = useState(null);
+  const [menu, setMenu] = useState(null);
+  const fileRef = React.useRef(null);
 
   useEffect(() => { if (temaInicial) { setDraft(temaInicial); limparTema(); } }, [temaInicial, limparTema]);
 
@@ -244,19 +262,37 @@ function Feed({ usuario, showToast, temaInicial, limparTema }) {
   }, [showToast]);
   useEffect(() => { carregar(); }, [carregar]);
 
+  const escolherFoto = (e) => {
+    const f = e.target.files?.[0]; if (!f) return;
+    if (f.size > 1.5 * 1024 * 1024) { showToast('Imagem muito grande (máx 1,5 MB)'); return; }
+    const r = new FileReader(); r.onload = () => setImagem(r.result); r.readAsDataURL(f);
+  };
+
   const publicar = async () => {
-    if (!draft.trim()) return;
+    if (!draft.trim() && !imagem) return;
     if (!API_ATIVA) {
-      setPosts((p) => [{ id: Date.now(), autor: { id: usuario.id, avatar_inicial: usuario.avatar_inicial, apelido: usuario.apelido }, grupo: { nome: 'Turma 6ºB' }, tempo: 'agora', texto: draft.trim(), reacoes: 0, eu_reagi: false, comentarios: 0 }, ...p]);
-      setDraft(''); showToast('Publicado no mural'); return;
+      setPosts((p) => [{ id: Date.now(), autor: { id: usuario.id, avatar_inicial: usuario.avatar_inicial, apelido: usuario.apelido }, grupo: { nome: 'Turma 6ºB' }, tempo: 'agora', texto: draft.trim(), imagem_url: imagem, reacoes: 0, por_tipo: {}, minha_reacao: null, comentarios: 0, salvo: false }, ...p]);
+      setDraft(''); setImagem(null); showToast('Publicado no mural'); return;
     }
-    try { setEnviando(true); const novo = await api.criarPost(null, draft.trim()); setPosts((p) => [novo, ...p]); setDraft(''); showToast('Publicado no mural'); }
+    try { setEnviando(true); const novo = await api.criarPost(null, draft.trim(), imagem); setPosts((p) => [novo, ...p]); setDraft(''); setImagem(null); showToast('Publicado no mural'); }
     catch (e) { showToast(e.message); } finally { setEnviando(false); }
   };
 
-  const curtir = async (id) => {
-    setPosts((p) => p.map((x) => x.id === id ? { ...x, eu_reagi: !x.eu_reagi, reacoes: x.reacoes + (x.eu_reagi ? -1 : 1) } : x));
-    if (API_ATIVA) { try { const r = await api.reagir(id); setPosts((p) => p.map((x) => x.id === id ? { ...x, eu_reagi: r.eu_reagi, reacoes: r.reacoes } : x)); } catch (e) { showToast(e.message); carregar(); } }
+  const reagir = async (id, tipo) => {
+    setMenu(null);
+    setPosts((p) => p.map((x) => {
+      if (x.id !== id) return x;
+      const mesma = x.minha_reacao === tipo;
+      const tinha = !!x.minha_reacao;
+      return { ...x, minha_reacao: mesma ? null : tipo, reacoes: x.reacoes + (mesma ? -1 : tinha ? 0 : 1) };
+    }));
+    if (API_ATIVA) { try { const r = await api.reagir(id, tipo); setPosts((p) => p.map((x) => x.id === id ? { ...x, minha_reacao: r.minha_reacao, reacoes: r.total, por_tipo: r.por_tipo } : x)); } catch (e) { showToast(e.message); carregar(); } }
+  };
+
+  const salvar = async (id) => {
+    setPosts((p) => p.map((x) => x.id === id ? { ...x, salvo: !x.salvo } : x));
+    if (API_ATIVA) { try { const r = await api.salvar(id); setPosts((p) => p.map((x) => x.id === id ? { ...x, salvo: r.salvo } : x)); showToast(r.salvo ? 'Post salvo' : 'Removido dos salvos'); } catch (e) { showToast(e.message); } }
+    else showToast('Post salvo');
   };
 
   const remover = async (id) => {
@@ -271,22 +307,24 @@ function Feed({ usuario, showToast, temaInicial, limparTema }) {
   };
 
   const ehModerador = usuario.papel === 'responsavel' || usuario.papel === 'admin';
-  const stories = API_ATIVA ? [...new Map(posts.map((p) => [p.autor.apelido, p.autor])).values()].slice(0, 6) : [{ avatar_inicial: 'L', apelido: 'Lucas' }, { avatar_inicial: 'B', apelido: 'Bel' }, { avatar_inicial: 'T', apelido: 'Théo' }, { avatar_inicial: 'H', apelido: 'Helena' }];
+  const stories = API_ATIVA ? [...new Map(posts.map((p) => [p.autor.apelido, p.autor])).values()].slice(0, 6) : [{ id: 13, avatar_inicial: 'L', apelido: 'Lucas' }, { id: 12, avatar_inicial: 'B', apelido: 'Bel' }, { id: 14, avatar_inicial: 'T', apelido: 'Théo' }, { id: 15, avatar_inicial: 'H', apelido: 'Helena' }];
 
   return (
     <div onClick={() => menu && setMenu(null)}>
       <div className="stories">
         <div className="story"><div className="story-add"><Icon name="plus" size={18} stroke={2.5} /></div><span>Você</span></div>
-        {stories.map((a) => <div key={a.apelido} className="story"><Avatar initial={a.avatar_inicial} size={46} ring /><span>{a.apelido}</span></div>)}
+        {stories.map((a) => <button key={a.apelido} className="story" onClick={() => a.id && abrirPerfil(a.id)}><Avatar initial={a.avatar_inicial} size={46} ring /><span>{a.apelido}</span></button>)}
       </div>
 
       <div className="composer">
         <Avatar initial={usuario.avatar_inicial} size={40} badgeIcon={usuario.status_icone} />
         <div className="composer-body">
           <textarea className="composer-input" rows={2} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={`No que você tá pensando, ${usuario.apelido}?`} />
+          {imagem && <div className="composer-preview"><img src={imagem} alt="prévia" /><button onClick={() => setImagem(null)} aria-label="Remover"><Icon name="x" size={16} stroke={2.5} /></button></div>}
           <div className="composer-actions">
             <div className="composer-tools">
-              <button className="app-icon-btn" aria-label="Foto" onClick={() => showToast('Fotos chegam na próxima versão')}><Icon name="camera" size={20} /></button>
+              <input ref={fileRef} type="file" accept="image/*" hidden onChange={escolherFoto} />
+              <button className="app-icon-btn" aria-label="Foto" onClick={() => fileRef.current?.click()}><Icon name="photo" size={20} /></button>
             </div>
             <button className="btn btn-red btn-sm" onClick={publicar} disabled={enviando}>{enviando ? 'Enviando…' : <>Postar <Icon name="send" size={15} /></>}</button>
           </div>
@@ -296,65 +334,248 @@ function Feed({ usuario, showToast, temaInicial, limparTema }) {
       {carregando && <p className="feed-end">Carregando o mural…</p>}
       {!carregando && posts.length === 0 && <p className="feed-end">Nada por aqui ainda. Seja o primeiro a postar!</p>}
 
-      {posts.map((p) => {
-        const meu = p.autor?.id === usuario.id || p.autor?.apelido === usuario.apelido;
-        return (
-          <article key={p.id} className="post">
-            <div className="post-head">
-              <Avatar initial={p.autor.avatar_inicial} size={42} />
-              <div className="post-who">
-                <strong>{p.autor.apelido}{p.badge && <span className="post-badge"><Icon name="medal" size={11} stroke={2.5} />{p.badge}</span>}</strong>
-                <span>{p.grupo?.nome} · {p.tempo}</span>
-              </div>
-              <div className="post-menu-wrap" onClick={(e) => e.stopPropagation()}>
-                <button className="app-icon-btn" aria-label="Mais" onClick={() => setMenu(menu === p.id ? null : p.id)}><Icon name="dots" size={20} /></button>
-                {menu === p.id && (
-                  <div className="post-menu">
-                    {(meu || ehModerador) && <button onClick={() => remover(p.id)}><Icon name="x" size={16} /> Remover post</button>}
-                    {!meu && <button onClick={() => denunciar(p.id)}><Icon name="flag" size={16} /> Denunciar</button>}
-                  </div>
-                )}
-              </div>
-            </div>
-            <p className="post-text">{p.texto}</p>
-            {p.photo && <div className="post-photo"><Icon name="photo" size={28} /></div>}
-            <div className="post-actions">
-              <Pill icon="heart" active={p.eu_reagi} onClick={() => curtir(p.id)}>{p.reacoes}</Pill>
-              <Pill icon="comment" tone={aberto === p.id ? 'gold' : 'neutral'} onClick={() => setAberto(aberto === p.id ? null : p.id)}>{p.comentarios}</Pill>
-            </div>
-            {aberto === p.id && <Comentarios post={p} usuario={usuario} showToast={showToast} onNovo={() => setPosts((ps) => ps.map((x) => x.id === p.id ? { ...x, comentarios: x.comentarios + 1 } : x))} />}
-          </article>
-        );
-      })}
+      {posts.map((p) => (
+        <PostCard key={p.id} p={p} usuario={usuario} ehModerador={ehModerador}
+          menuAberto={menu === p.id} setMenu={(v) => setMenu(v ? p.id : null)}
+          comentariosAbertos={aberto === p.id} toggleComentarios={() => setAberto(aberto === p.id ? null : p.id)}
+          onReagir={reagir} onSalvar={salvar} onRemover={remover} onDenunciar={denunciar} abrirPerfil={abrirPerfil}
+          onNovoComentario={() => setPosts((ps) => ps.map((x) => x.id === p.id ? { ...x, comentarios: x.comentarios + 1 } : x))}
+          showToast={showToast} />
+      ))}
       {!carregando && posts.length > 0 && <p className="feed-end">Você viu tudo por aqui.</p>}
     </div>
   );
 }
 
-function Comentarios({ post, usuario, showToast, onNovo }) {
+function PostCard({ p, usuario, ehModerador, menuAberto, setMenu, comentariosAbertos, toggleComentarios, onReagir, onSalvar, onRemover, onDenunciar, abrirPerfil, onNovoComentario, showToast }) {
+  const [picker, setPicker] = useState(false);
+  const meu = p.autor?.id === usuario.id || p.autor?.apelido === usuario.apelido;
+  const minha = p.minha_reacao;
+  const tipos = Object.entries(p.por_tipo || {}).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([t]) => t);
+
+  return (
+    <article className="post">
+      <div className="post-head">
+        <button className="post-avatar-btn" onClick={() => p.autor?.id && abrirPerfil(p.autor.id)}><Avatar initial={p.autor.avatar_inicial} size={42} /></button>
+        <div className="post-who">
+          <strong><button className="post-autor" onClick={() => p.autor?.id && abrirPerfil(p.autor.id)}>{p.autor.apelido}</button>{p.badge && <span className="post-badge"><Icon name="medal" size={11} stroke={2.5} />{p.badge}</span>}</strong>
+          <span>{p.grupo?.nome} · {p.tempo}</span>
+        </div>
+        <div className="post-menu-wrap" onClick={(e) => e.stopPropagation()}>
+          <button className="app-icon-btn" aria-label="Mais" onClick={() => setMenu(!menuAberto)}><Icon name="dots" size={20} /></button>
+          {menuAberto && (
+            <div className="post-menu">
+              <button onClick={() => onSalvar(p.id)}><Icon name="star" size={16} /> {p.salvo ? 'Remover dos salvos' : 'Salvar post'}</button>
+              {(meu || ehModerador) && <button onClick={() => onRemover(p.id)} className="perigo"><Icon name="x" size={16} /> Remover post</button>}
+              {!meu && <button onClick={() => onDenunciar(p.id)} className="perigo"><Icon name="flag" size={16} /> Denunciar</button>}
+            </div>
+          )}
+        </div>
+      </div>
+      {p.texto && <p className="post-text">{p.texto}</p>}
+      {p.imagem_url && <div className="post-img"><img src={p.imagem_url} alt="" /></div>}
+      {p.reacoes > 0 && (
+        <div className="post-resumo">
+          <span className="post-resumo-emojis">{tipos.map((t) => <span key={t}>{emojiDe(t)}</span>)}</span>
+          <span>{p.reacoes}</span>
+          {p.comentarios > 0 && <span className="post-resumo-com">{p.comentarios} comentário{p.comentarios > 1 ? 's' : ''}</span>}
+        </div>
+      )}
+      <div className="post-actions" onClick={(e) => e.stopPropagation()}>
+        <div className="reagir-wrap" onMouseLeave={() => setPicker(false)}>
+          {picker && (
+            <div className="reagir-picker">
+              {REACOES.map((r) => <button key={r.tipo} title={r.label} onClick={() => { onReagir(p.id, r.tipo); setPicker(false); }}>{r.emoji}</button>)}
+            </div>
+          )}
+          <button className={`post-acao ${minha ? 'is-on' : ''}`} onClick={() => onReagir(p.id, minha || 'curtida')} onMouseEnter={() => setPicker(true)}>
+            {minha ? <><span className="post-acao-emoji">{emojiDe(minha)}</span> {REACOES.find((r) => r.tipo === minha)?.label}</> : <><Icon name="heart" size={18} /> Curtir</>}
+          </button>
+        </div>
+        <button className={`post-acao ${comentariosAbertos ? 'is-on' : ''}`} onClick={toggleComentarios}><Icon name="comment" size={18} /> Comentar</button>
+        <button className={`post-acao ${p.salvo ? 'is-on' : ''}`} onClick={() => onSalvar(p.id)}><Icon name="star" size={18} /> {p.salvo ? 'Salvo' : 'Salvar'}</button>
+      </div>
+      {comentariosAbertos && <Comentarios post={p} usuario={usuario} showToast={showToast} onNovo={onNovoComentario} abrirPerfil={abrirPerfil} />}
+    </article>
+  );
+}
+
+function Comentarios({ post, usuario, showToast, onNovo, abrirPerfil }) {
   const [lista, setLista] = useState(API_ATIVA ? null : (DEMO_COMENTARIOS[post.id] || []));
   const [texto, setTexto] = useState('');
+  const [respondendo, setRespondendo] = useState(null); // {id, apelido}
   const [enviando, setEnviando] = useState(false);
 
   useEffect(() => { if (API_ATIVA) api.comentarios(post.id).then(setLista).catch(() => setLista([])); }, [post.id]);
 
   const enviar = async () => {
     if (!texto.trim()) return;
-    if (!API_ATIVA) { setLista((l) => [...l, { id: Date.now(), autor: { avatar_inicial: usuario.avatar_inicial, apelido: usuario.apelido }, texto: texto.trim() }]); setTexto(''); onNovo(); return; }
-    try { setEnviando(true); const c = await api.comentar(post.id, texto.trim()); setLista((l) => [...(l || []), c]); setTexto(''); onNovo(); }
-    catch (e) { showToast(e.message); } finally { setEnviando(false); }
+    const novoLocal = { id: Date.now(), autor: { id: usuario.id, avatar_inicial: usuario.avatar_inicial, apelido: usuario.apelido }, texto: texto.trim(), respondendo_id: respondendo?.id || null };
+    if (!API_ATIVA) { setLista((l) => [...l, novoLocal]); setTexto(''); setRespondendo(null); onNovo(); return; }
+    try {
+      setEnviando(true);
+      const c = await api.comentar(post.id, texto.trim(), respondendo?.id);
+      setLista((l) => [...(l || []), c]); setTexto(''); setRespondendo(null); onNovo();
+    } catch (e) { showToast(e.message); } finally { setEnviando(false); }
   };
+
+  // organiza: raiz + respostas aninhadas
+  const raizes = (lista || []).filter((c) => !c.respondendo_id);
+  const respostasDe = (id) => (lista || []).filter((c) => c.respondendo_id === id);
+
+  const Item = ({ c, filho }) => (
+    <div className={`coment ${filho ? 'is-resposta' : ''}`}>
+      <button className="post-avatar-btn" onClick={() => c.autor?.id && abrirPerfil?.(c.autor.id)}><Avatar initial={c.autor.avatar_inicial} size={filho ? 24 : 28} /></button>
+      <div>
+        <strong><button className="post-autor" onClick={() => c.autor?.id && abrirPerfil?.(c.autor.id)}>{c.autor.apelido}</button></strong>
+        <p>{c.texto}</p>
+        {!filho && <button className="coment-responder" onClick={() => setRespondendo({ id: c.id, apelido: c.autor.apelido })}>Responder</button>}
+      </div>
+    </div>
+  );
 
   return (
     <div className="coments" onClick={(e) => e.stopPropagation()}>
       {lista === null && <p className="coments-empty">Carregando…</p>}
       {lista && lista.length === 0 && <p className="coments-empty">Seja o primeiro a comentar.</p>}
-      {lista && lista.map((c) => (
-        <div key={c.id} className="coment"><Avatar initial={c.autor.avatar_inicial} size={28} /><div><strong>{c.autor.apelido}</strong><p>{c.texto}</p></div></div>
+      {raizes.map((c) => (
+        <div key={c.id}>
+          <Item c={c} />
+          {respostasDe(c.id).map((r) => <Item key={r.id} c={r} filho />)}
+        </div>
       ))}
+      {respondendo && (
+        <div className="coment-respondendo">
+          Respondendo a <strong>{respondendo.apelido}</strong>
+          <button onClick={() => setRespondendo(null)} aria-label="Cancelar"><Icon name="x" size={14} stroke={2.5} /></button>
+        </div>
+      )}
       <div className="coment-form">
-        <input className="input" value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && enviar()} placeholder="Escreva um comentário…" />
+        <input className="input" value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && enviar()} placeholder={respondendo ? `Responder a ${respondendo.apelido}…` : 'Escreva um comentário…'} />
         <button className="btn btn-red btn-sm" onClick={enviar} disabled={enviando}><Icon name="send" size={15} /></button>
+      </div>
+    </div>
+  );
+}
+
+/* ===================== BUSCA ===================== */
+function Busca({ abrirPerfil, irGrupos, fechar }) {
+  const [q, setQ] = useState('');
+  const [res, setRes] = useState(null);
+  const [carregando, setCarregando] = useState(false);
+
+  useEffect(() => {
+    if (q.trim().length < 2) { setRes(null); return; }
+    const t = setTimeout(async () => {
+      if (!API_ATIVA) {
+        const termo = q.toLowerCase();
+        setRes({
+          pessoas: [{ id: 12, apelido: 'Bel', avatar_inicial: 'B', bio: 'Amo futebol' }, { id: 13, apelido: 'Lucas', avatar_inicial: 'L' }].filter((p) => p.apelido.toLowerCase().includes(termo)),
+          grupos: DEMO_GROUPS.filter((g) => g.nome.toLowerCase().includes(termo)),
+        });
+        return;
+      }
+      try { setCarregando(true); setRes(await api.buscar(q.trim())); } catch (e) { setRes({ pessoas: [], grupos: [] }); } finally { setCarregando(false); }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  const vazio = res && res.pessoas.length === 0 && res.grupos.length === 0;
+
+  return (
+    <div className="busca">
+      <div className="busca-head">
+        <div className="busca-campo">
+          <Icon name="search" size={18} style={{ color: 'var(--ink-3)' }} />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar pessoas e grupos…" autoFocus />
+        </div>
+        <button className="app-icon-btn" onClick={fechar} aria-label="Fechar"><Icon name="x" size={18} /></button>
+      </div>
+      {q.trim().length < 2 && <p className="coments-empty" style={{ padding: '0 16px 14px' }}>Digite ao menos 2 letras.</p>}
+      {carregando && <p className="feed-end">Buscando…</p>}
+      {vazio && <p className="feed-end">Nada encontrado para "{q}".</p>}
+      {res && res.pessoas.length > 0 && <p className="label busca-label">Pessoas</p>}
+      {res && res.pessoas.map((p) => (
+        <button key={p.id} className="row-card row-card--btn busca-item" onClick={() => abrirPerfil(p.id)}>
+          <Avatar initial={p.avatar_inicial} size={42} />
+          <div className="row-card-body"><strong>{p.apelido}</strong><span>{p.bio || 'Aluno'}</span></div>
+          <Icon name="chevronRight" size={20} style={{ color: 'var(--ink-3)' }} />
+        </button>
+      ))}
+      {res && res.grupos.length > 0 && <p className="label busca-label">Grupos</p>}
+      {res && res.grupos.map((g) => (
+        <button key={g.id} className="row-card row-card--btn busca-item" onClick={irGrupos}>
+          <Tile icon={g.icone} tone={TONE_POR_ICONE[g.icone] || 'red'} size={42} radius={13} />
+          <div className="row-card-body"><strong>{g.nome}</strong><span>{g.membros} colegas</span></div>
+          <Icon name="chevronRight" size={20} style={{ color: 'var(--ink-3)' }} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ===================== PERFIL DE OUTRA PESSOA ===================== */
+function PerfilOutro({ id, usuario, showToast, voltar }) {
+  const [dados, setDados] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [seguindo, setSeguindo] = useState(false);
+
+  useEffect(() => {
+    if (!API_ATIVA) {
+      setDados({ usuario: { id, apelido: 'Bel', avatar_inicial: 'B', status_icone: 'ball', bio: 'Amo futebol ⚽', pontos: 140 }, escola: 'Escola Doutor Blumenau', sou_eu: false, eu_sigo: false, stats: { posts: 12, curtidas: 48, pontos: 140, ranking: 1, seguidores: 8, seguindo: 5 }, medalhas: [{ icone: 'medal', titulo: 'Craque da semana' }] });
+      setPosts(DEMO_POSTS.filter((p) => p.autor.apelido === 'Bel'));
+      return;
+    }
+    api.perfil(id).then((d) => { setDados(d); setSeguindo(d.eu_sigo); }).catch((e) => showToast(e.message));
+    api.feed && fetch(`${process.env.REACT_APP_API_URL}/feed?usuario_id=${id}`, { headers: { Authorization: `Bearer ${window.__sz_token}` } }).then((r) => r.json()).then(setPosts).catch(() => {});
+  }, [id, showToast]);
+
+  const toggleSeguir = async () => {
+    setSeguindo((s) => !s);
+    setDados((d) => d ? { ...d, stats: { ...d.stats, seguidores: d.stats.seguidores + (seguindo ? -1 : 1) } } : d);
+    if (API_ATIVA) { try { const r = await api.seguir(id); setSeguindo(r.seguindo); } catch (e) { showToast(e.message); } }
+    else showToast(seguindo ? 'Deixou de seguir' : 'Seguindo!');
+  };
+
+  if (!dados) return <p className="feed-end">Carregando perfil…</p>;
+  const u = dados.usuario;
+  const tones = ['gold', 'red', 'blue', 'green'];
+
+  return (
+    <div>
+      <div className="perfil-topo">
+        <button className="voltar-link" onClick={voltar}><Icon name="arrowLeft" size={16} /> Voltar</button>
+      </div>
+      <div className="profile-hero fachwerk">
+        <div className="profile-avatar"><Avatar initial={u.avatar_inicial} size={88} badgeIcon={u.status_icone} /></div>
+        <h2 className="h2" style={{ marginTop: 10 }}>{u.apelido}</h2>
+        {u.bio && <p className="perfil-bio">{u.bio}</p>}
+        <p className="profile-school">{dados.escola} · Pomerode</p>
+        {!dados.sou_eu && (
+          <button className={`btn btn-sm ${seguindo ? 'btn-ghost' : 'btn-red'}`} style={{ marginTop: 12 }} onClick={toggleSeguir}>
+            {seguindo ? <><Icon name="check" size={15} stroke={3} /> Seguindo</> : <><Icon name="plus" size={15} stroke={3} /> Seguir</>}
+          </button>
+        )}
+      </div>
+      <div className="stats">
+        {[[dados.stats.posts, 'Posts'], [dados.stats.seguidores, 'Seguidores'], [dados.stats.seguindo, 'Seguindo'], [dados.stats.pontos, 'Pontos']].map(([n, l]) => (
+          <div key={l} className="stat"><strong>{n}</strong><span>{l}</span></div>
+        ))}
+      </div>
+      <div className="pad">
+        {dados.medalhas?.length > 0 && (<>
+          <p className="label">Conquistas</p>
+          <div className="badges">{dados.medalhas.map((m, i) => <div key={m.titulo} className="badge-card"><Tile icon={m.icone || 'medal'} tone={tones[i % 4]} size={36} radius={10} /><span>{m.titulo}</span></div>)}</div>
+        </>)}
+        <p className="label" style={{ marginTop: 22 }}>Posts de {u.apelido}</p>
+        {posts.length === 0 && <p className="coments-empty">Ainda não postou nada.</p>}
+        {posts.map((p) => (
+          <div key={p.id} className="mini-post">
+            {p.texto && <p>{p.texto}</p>}
+            {p.imagem_url && <img src={p.imagem_url} alt="" />}
+            <span>{emojiDe(p.minha_reacao || 'curtida')} {p.reacoes} · {p.comentarios} comentários</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -570,7 +791,7 @@ function Resultado({ score, total, voltar }) {
 }
 
 /* ===================== RANKING ===================== */
-function Ranking({ usuario }) {
+function Ranking({ usuario, abrirPerfil }) {
   const [dados, setDados] = useState(API_ATIVA ? null : DEMO_RANKING);
   useEffect(() => { if (API_ATIVA) api.ranking().then(setDados).catch(() => setDados({ top: [], minha_posicao: '-', meus_pontos: 0 })); }, []);
   const medalha = (pos) => pos === 1 ? 'gold' : pos === 2 ? 'ink' : pos === 3 ? 'red' : null;
@@ -587,22 +808,30 @@ function Ranking({ usuario }) {
       {dados === null && <p className="feed-end">Carregando…</p>}
       {dados && dados.top.length === 0 && <p className="feed-end">Ninguém pontuou ainda. Vai nos Desafios e seja o primeiro!</p>}
       {dados && dados.top.map((r) => (
-        <div key={r.posicao} className={`rank-row ${r.eu ? 'is-me' : ''}`}>
+        <button key={r.posicao} className={`rank-row ${r.eu ? 'is-me' : ''}`} onClick={() => !r.eu && r.usuario.id && abrirPerfil?.(r.usuario.id)}>
           <div className="rank-pos">{medalha(r.posicao) ? <Tile icon="medal" tone={medalha(r.posicao)} size={30} radius={9} /> : <span>{r.posicao}</span>}</div>
           <Avatar initial={r.usuario.avatar_inicial} size={36} />
           <strong className="rank-nome">{r.usuario.apelido}{r.eu && <em> (você)</em>}</strong>
           <span className="rank-pts">{r.pontos} pts</span>
-        </div>
+        </button>
       ))}
     </div>
   );
 }
 
 /* ===================== PERFIL ===================== */
-function Perfil({ usuario, setUsuario, onLogout }) {
+function Perfil({ usuario, setUsuario, onLogout, showToast }) {
   const [dados, setDados] = useState(null);
   const [status, setStatusLocal] = useState(usuario.status_icone || 'gamepad');
-  useEffect(() => { if (API_ATIVA) api.perfil().then(setDados).catch(() => {}); }, []);
+  const [bio, setBio] = useState(usuario.bio || '');
+  const [editandoBio, setEditandoBio] = useState(false);
+  useEffect(() => { if (API_ATIVA) api.perfil().then((d) => { setDados(d); setBio(d.usuario.bio || ''); }).catch(() => {}); }, []);
+
+  const salvarBio = async () => {
+    setEditandoBio(false); setUsuario({ ...usuario, bio });
+    if (API_ATIVA) { try { await api.atualizarPerfil({ bio }); showToast?.('Bio atualizada'); } catch (e) { showToast?.(e.message); } }
+    else showToast?.('Bio atualizada');
+  };
   const trocarStatus = async (s) => { setStatusLocal(s); setUsuario({ ...usuario, status_icone: s }); if (API_ATIVA) { try { await api.atualizarPerfil({ status_icone: s }); } catch (e) { /* */ } } };
   const stats = dados?.stats || { posts: 0, curtidas: 0, pontos: usuario.pontos ?? 0, ranking: '-' };
   const medalhas = dados?.medalhas?.length ? dados.medalhas : (API_ATIVA ? [] : [{ icone: 'medal', titulo: 'Craque da semana' }, { icone: 'flame', titulo: '7 dias seguidos' }, { icone: 'bulb', titulo: 'Quiz perfeito' }, { icone: 'users', titulo: '5 amigos' }]);
@@ -612,10 +841,17 @@ function Perfil({ usuario, setUsuario, onLogout }) {
       <div className="profile-hero fachwerk">
         <div className="profile-avatar"><Avatar initial={usuario.avatar_inicial} size={88} badgeIcon={status} /></div>
         <h2 className="h2" style={{ marginTop: 10 }}>{usuario.apelido}</h2>
+        {!editandoBio && <p className="perfil-bio" onClick={() => setEditandoBio(true)}>{bio || 'Toque para escrever sua bio…'}</p>}
+        {editandoBio && (
+          <div className="bio-edit">
+            <input className="input" value={bio} maxLength={160} onChange={(e) => setBio(e.target.value)} placeholder="Fale de você em uma linha" autoFocus />
+            <button className="btn btn-red btn-sm" onClick={salvarBio}><Icon name="check" size={15} stroke={3} /></button>
+          </div>
+        )}
         <p className="profile-school">{dados?.escola || 'Escola Doutor Blumenau'} · Pomerode</p>
       </div>
       <div className="stats">
-        {[[stats.posts, 'Posts'], [stats.curtidas, 'Curtidas'], [stats.pontos, 'Pontos'], [`${stats.ranking}º`, 'Ranking']].map(([n, l]) => <div key={l} className="stat"><strong>{n}</strong><span>{l}</span></div>)}
+        {[[stats.posts, 'Posts'], [stats.seguidores ?? 0, 'Seguidores'], [stats.pontos, 'Pontos'], [`${stats.ranking}º`, 'Ranking']].map(([n, l]) => <div key={l} className="stat"><strong>{n}</strong><span>{l}</span></div>)}
       </div>
       <div className="pad">
         <p className="label">Status do dia</p>
