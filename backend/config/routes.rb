@@ -80,6 +80,9 @@ Rails.application.routes.draw do
         post "convites",           to: "convites#create"
         get  "convites",           to: "convites#index"
         get  "painel",             to: "painel#show"
+        get   "alunos",            to: "alunos#index"
+        patch "alunos/:id",        to: "alunos#update"
+        get   "turmas",            to: "alunos#turmas"
       end
     end
   end

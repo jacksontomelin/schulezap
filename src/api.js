@@ -126,5 +126,8 @@ export const api = {
     resolverDenuncia: (id, acao) => req(`/admin/denuncias/${id}`, { method: "PATCH", body: { acao } }),
     convites: () => req("/admin/convites"),
     gerarConvites: (turma, quantidade) => req("/admin/convites", { method: "POST", body: { turma, quantidade } }),
+    alunos: () => req("/admin/alunos"),
+    salvarAluno: (id, dados) => req(`/admin/alunos/${id}`, { method: "PATCH", body: dados }),
+    turmas: () => req("/admin/turmas"),
   },
 };

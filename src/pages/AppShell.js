@@ -212,7 +212,7 @@ export default function AppShell() {
               ['descobrir', 'search', 'Descobrir'],
               ['conversas', 'chat', 'Mensagens'],
               ['ranking', 'trophy', 'Ranking'],
-              ...(ehModerador ? [['fila-fala', 'chat', 'Pedidos de ajuda'], ['moderar', 'shield', 'Moderar']] : []),
+              ...(ehModerador ? [['central', 'grid', 'Central da escola'], ['fila-fala', 'chat', 'Pedidos de ajuda'], ['moderar', 'shield', 'Moderar']] : []),
               ['perfil', 'user', 'Perfil'],
             ].map(([id, ic, lb]) => (
               <button key={id} onClick={() => { setTab(id); setPainel(null); }} className={`app-nav-btn ${tab === id ? 'is-active' : ''}`}>
@@ -230,6 +230,7 @@ export default function AppShell() {
             {tab === 'jogos' && <Jogos showToast={showToast} usuario={usuario} setUsuario={setUsuario} irPostar={irPostar} />}
             {tab === 'fala' && <FalaComigo usuario={usuario} showToast={showToast} voltar={() => setTab('feed')} />}
             {tab === 'fila-fala' && ehModerador && <FilaFala showToast={showToast} />}
+            {tab === 'central' && ehModerador && <CentralEscola usuario={usuario} showToast={showToast} />}
             {tab === 'avisos' && <Avisos usuario={usuario} showToast={showToast} />}
             {tab === 'boletim' && <Boletim showToast={showToast} />}
             {tab === 'descobrir' && <Descobrir abrirPerfil={abrirPerfil} showToast={showToast} verHashtag={(t) => { setTab('feed'); showToast(`Mostrando #${t}`); }} />}
@@ -284,7 +285,7 @@ export default function AppShell() {
                   ['jogos', 'gamepad', 'Desafios'],
                   ['ranking', 'trophy', 'Ranking'],
                   ...(usuario.comunicacao_assistiva ? [['fala', 'chat', 'Fala Comigo']] : []),
-                  ...(ehModerador ? [['fila-fala', 'chat', 'Pedidos'], ['moderar', 'shield', 'Moderar']] : []),
+                  ...(ehModerador ? [['central', 'grid', 'Central'], ['fila-fala', 'chat', 'Pedidos'], ['moderar', 'shield', 'Moderar']] : []),
                 ].map(([id, ic, lb]) => (
                   <button key={id} className={`mais-item ${tab === id ? 'is-on' : ''}`} onClick={() => { setTab(id); setMenuMais(false); setPainel(null); }}>
                     <Tile icon={ic} tone={tab === id ? 'solidRed' : 'gold'} size={44} radius={14} />
@@ -2069,6 +2070,277 @@ function FilaFala({ showToast }) {
           </div>
         ))}
       </>)}
+    </div>
+  );
+}
+
+/* ===================== CENTRAL DA ESCOLA (alimentar dados) ===================== */
+const DEMO_ALUNOS = [
+  { id: 11, apelido: 'Marco', avatar_inicial: 'M', turma: '8º Ano A', papel: 'aluno', notas: 13, comunicacao_assistiva: true },
+  { id: 12, apelido: 'Bel', avatar_inicial: 'B', turma: '8º Ano A', papel: 'aluno', notas: 13, comunicacao_assistiva: false },
+  { id: 18, apelido: 'Larissa', avatar_inicial: 'L', turma: '8º Ano A', papel: 'aluno', notas: 13, comunicacao_assistiva: false },
+  { id: 14, apelido: 'Théo', avatar_inicial: 'T', turma: '8º Ano A', papel: 'aluno', notas: 13, comunicacao_assistiva: false },
+  { id: 13, apelido: 'Lucas', avatar_inicial: 'L', turma: '8º Ano B', papel: 'aluno', notas: 0, comunicacao_assistiva: false },
+  { id: 16, apelido: 'Helena', avatar_inicial: 'H', turma: '8º Ano A', papel: 'aluno', notas: 0, comunicacao_assistiva: false },
+];
+const DISCIPLINAS_PADRAO = ['Alemão', 'Matemática', 'Português', 'História SC', 'Ciências', 'Geografia', 'Educação Física', 'Artes'];
+
+function CentralEscola({ usuario, showToast }) {
+  const [aba, setAba] = useState('notas');
+  const abas = [
+    ['notas', 'book', 'Notas'],
+    ['agenda', 'star', 'Agenda'],
+    ['alunos', 'users', 'Alunos'],
+  ];
+  return (
+    <div className="pad">
+      <h2 className="h2">Central da escola</h2>
+      <p className="sub">Aqui você alimenta os dados do sistema.</p>
+      <div className="central-abas">
+        {abas.map(([id, ic, lb]) => (
+          <button key={id} className={aba === id ? 'is-on' : ''} onClick={() => setAba(id)}>
+            <Icon name={ic} size={16} /> {lb}
+          </button>
+        ))}
+      </div>
+      {aba === 'notas' && <LancarNotas showToast={showToast} />}
+      {aba === 'agenda' && <CriarAgenda showToast={showToast} />}
+      {aba === 'alunos' && <GerenciarAlunos showToast={showToast} />}
+    </div>
+  );
+}
+
+/* ---- Lançar notas ---- */
+function LancarNotas({ showToast }) {
+  const [alunos, setAlunos] = useState(API_ATIVA ? [] : DEMO_ALUNOS);
+  const [disciplinas, setDisciplinas] = useState(DISCIPLINAS_PADRAO);
+  const [alunoId, setAlunoId] = useState('');
+  const [disciplina, setDisciplina] = useState('Matemática');
+  const [bimestre, setBimestre] = useState(1);
+  const [valor, setValor] = useState('');
+  const [salvando, setSalvando] = useState(false);
+  const [ultimas, setUltimas] = useState([]);
+
+  useEffect(() => {
+    if (!API_ATIVA) { setAlunoId(DEMO_ALUNOS[0].id); return; }
+    api.admin.alunos().then((l) => { const so = l.filter((u) => u.papel === 'aluno'); setAlunos(so); if (so[0]) setAlunoId(so[0].id); }).catch(() => {});
+    api.admin.turmas().then((t) => { if (t.disciplinas?.length) setDisciplinas([...new Set([...t.disciplinas, ...DISCIPLINAS_PADRAO])]); }).catch(() => {});
+  }, []);
+
+  const salvar = async () => {
+    const v = parseFloat(String(valor).replace(',', '.'));
+    if (!alunoId) { showToast('Escolha o aluno'); return; }
+    if (isNaN(v) || v < 0 || v > 10) { showToast('Nota deve ser entre 0 e 10'); return; }
+    const aluno = alunos.find((a) => String(a.id) === String(alunoId));
+    if (!API_ATIVA) {
+      setUltimas((u) => [{ id: Date.now(), aluno: aluno?.apelido, disciplina, bimestre, valor: v }, ...u]);
+      setValor(''); showToast(`Nota ${v} lançada para ${aluno?.apelido}`); return;
+    }
+    try {
+      setSalvando(true);
+      await api.lancarNota({ usuario_id: alunoId, disciplina, bimestre, valor: v });
+      setUltimas((u) => [{ id: Date.now(), aluno: aluno?.apelido, disciplina, bimestre, valor: v }, ...u]);
+      setValor(''); showToast(`Nota ${v} lançada para ${aluno?.apelido}`);
+    } catch (e) { showToast(e.message); } finally { setSalvando(false); }
+  };
+
+  return (
+    <div className="central-form">
+      <p className="label">Lançar nota</p>
+
+      <label className="campo-rot">Aluno</label>
+      <select className="input" value={alunoId} onChange={(e) => setAlunoId(e.target.value)}>
+        {alunos.length === 0 && <option>Nenhum aluno cadastrado</option>}
+        {alunos.map((a) => <option key={a.id} value={a.id}>{a.apelido}{a.turma ? ` — ${a.turma}` : ''}</option>)}
+      </select>
+
+      <label className="campo-rot">Disciplina</label>
+      <select className="input" value={disciplina} onChange={(e) => setDisciplina(e.target.value)}>
+        {disciplinas.map((d) => <option key={d} value={d}>{d}</option>)}
+      </select>
+
+      <label className="campo-rot">Bimestre</label>
+      <div className="bim-botoes">
+        {[1, 2, 3, 4].map((b) => (
+          <button key={b} className={`bim-btn ${bimestre === b ? 'is-on' : ''}`} onClick={() => setBimestre(b)}>{b}º</button>
+        ))}
+      </div>
+
+      <label className="campo-rot">Nota (0 a 10)</label>
+      <input className="input nota-input" value={valor} onChange={(e) => setValor(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && salvar()} placeholder="8.5" inputMode="decimal" />
+
+      <button className="btn btn-red btn-block" style={{ marginTop: 14 }} onClick={salvar} disabled={salvando}>
+        <Icon name="check" size={17} stroke={3} /> {salvando ? 'Salvando…' : 'Lançar nota'}
+      </button>
+
+      {ultimas.length > 0 && (
+        <>
+          <p className="label" style={{ marginTop: 20 }}>Lançadas agora</p>
+          {ultimas.slice(0, 6).map((u) => (
+            <div key={u.id} className="lancada">
+              <strong>{u.aluno}</strong>
+              <span>{u.disciplina} · {u.bimestre}º bim</span>
+              <em>{u.valor.toFixed(1)}</em>
+            </div>
+          ))}
+        </>
+      )}
+      <p className="central-dica">Lançar de novo a mesma disciplina e bimestre substitui a nota anterior.</p>
+    </div>
+  );
+}
+
+/* ---- Criar item de agenda ---- */
+function CriarAgenda({ showToast }) {
+  const [titulo, setTitulo] = useState('');
+  const [tipo, setTipo] = useState('prova');
+  const [data, setData] = useState('');
+  const [turma, setTurma] = useState('');
+  const [disciplina, setDisciplina] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const [turmas, setTurmas] = useState([]);
+  const [disciplinas, setDisciplinas] = useState(DISCIPLINAS_PADRAO);
+  const [salvando, setSalvando] = useState(false);
+  const [criados, setCriados] = useState([]);
+
+  useEffect(() => {
+    if (!API_ATIVA) { setTurmas(['8º Ano A', '8º Ano B']); return; }
+    api.admin.turmas().then((t) => {
+      setTurmas(t.turmas || []);
+      if (t.disciplinas?.length) setDisciplinas([...new Set([...t.disciplinas, ...DISCIPLINAS_PADRAO])]);
+    }).catch(() => {});
+  }, []);
+
+  const salvar = async () => {
+    if (!titulo.trim()) { showToast('Escreva o título'); return; }
+    if (!data) { showToast('Escolha a data'); return; }
+    const dados = { titulo: titulo.trim(), tipo, data, turma_alvo: turma || null, disciplina: disciplina || null, descricao: descricao.trim() || null };
+    if (!API_ATIVA) {
+      setCriados((c) => [{ id: Date.now(), ...dados }, ...c]);
+      setTitulo(''); setDescricao(''); showToast('Adicionado à agenda'); return;
+    }
+    try {
+      setSalvando(true);
+      await api.criarAgenda(dados);
+      setCriados((c) => [{ id: Date.now(), ...dados }, ...c]);
+      setTitulo(''); setDescricao(''); showToast('Adicionado à agenda');
+    } catch (e) { showToast(e.message); } finally { setSalvando(false); }
+  };
+
+  const tipos = [['prova', 'book', 'Prova'], ['tarefa', 'grid', 'Tarefa'], ['evento', 'star', 'Evento']];
+
+  return (
+    <div className="central-form">
+      <p className="label">Novo item na agenda</p>
+
+      <label className="campo-rot">O que é</label>
+      <div className="tipo-botoes">
+        {tipos.map(([id, ic, lb]) => (
+          <button key={id} className={`tipo-btn ${tipo === id ? 'is-on' : ''}`} onClick={() => setTipo(id)}>
+            <Icon name={ic} size={16} /> {lb}
+          </button>
+        ))}
+      </div>
+
+      <label className="campo-rot">Título</label>
+      <input className="input" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Prova de História Regional" />
+
+      <label className="campo-rot">Data</label>
+      <input className="input" type="date" value={data} onChange={(e) => setData(e.target.value)} />
+
+      <label className="campo-rot">Turma <span className="opcional">(vazio = todas)</span></label>
+      <select className="input" value={turma} onChange={(e) => setTurma(e.target.value)}>
+        <option value="">Todas as turmas</option>
+        {turmas.map((t) => <option key={t} value={t}>{t}</option>)}
+      </select>
+
+      <label className="campo-rot">Disciplina <span className="opcional">(opcional)</span></label>
+      <select className="input" value={disciplina} onChange={(e) => setDisciplina(e.target.value)}>
+        <option value="">—</option>
+        {disciplinas.map((d) => <option key={d} value={d}>{d}</option>)}
+      </select>
+
+      <label className="campo-rot">Detalhes <span className="opcional">(opcional)</span></label>
+      <textarea className="composer-input" rows={2} value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Estudar capítulos 4 e 5" />
+
+      <button className="btn btn-red btn-block" style={{ marginTop: 14 }} onClick={salvar} disabled={salvando}>
+        <Icon name="plus" size={17} stroke={3} /> {salvando ? 'Salvando…' : 'Adicionar à agenda'}
+      </button>
+
+      {criados.length > 0 && (
+        <>
+          <p className="label" style={{ marginTop: 20 }}>Criados agora</p>
+          {criados.map((c) => (
+            <div key={c.id} className="lancada">
+              <strong>{c.titulo}</strong>
+              <span>{c.tipo} · {c.data}{c.turma_alvo ? ` · ${c.turma_alvo}` : ''}</span>
+            </div>
+          ))}
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ---- Gerenciar alunos ---- */
+function GerenciarAlunos({ showToast }) {
+  const [alunos, setAlunos] = useState(API_ATIVA ? null : DEMO_ALUNOS);
+  const [editando, setEditando] = useState(null);
+  const [turmaNova, setTurmaNova] = useState('');
+
+  const carregar = useCallback(async () => {
+    if (!API_ATIVA) return;
+    try { setAlunos(await api.admin.alunos()); } catch (e) { showToast(e.message); setAlunos([]); }
+  }, [showToast]);
+  useEffect(() => { carregar(); }, [carregar]);
+
+  const salvarTurma = async (a) => {
+    const t = turmaNova.trim();
+    setAlunos((l) => l.map((x) => x.id === a.id ? { ...x, turma: t } : x));
+    setEditando(null);
+    if (API_ATIVA) { try { await api.admin.salvarAluno(a.id, { turma: t }); } catch (e) { showToast(e.message); carregar(); return; } }
+    showToast(`${a.apelido} → ${t || 'sem turma'}`);
+  };
+
+  const alternarFala = async (a) => {
+    const novo = !a.comunicacao_assistiva;
+    setAlunos((l) => l.map((x) => x.id === a.id ? { ...x, comunicacao_assistiva: novo } : x));
+    if (API_ATIVA) { try { await api.admin.salvarAluno(a.id, { comunicacao_assistiva: novo }); } catch (e) { showToast(e.message); carregar(); return; } }
+    showToast(novo ? `Fala Comigo ativado para ${a.apelido}` : `Desativado para ${a.apelido}`);
+  };
+
+  if (alunos === null) return <p className="feed-end">Carregando…</p>;
+
+  return (
+    <div>
+      <p className="label">Alunos da escola ({alunos.length})</p>
+      {alunos.map((a) => (
+        <div key={a.id} className="aluno-linha">
+          <Avatar initial={a.avatar_inicial} foto={a.foto_url} size={40} />
+          <div className="aluno-info">
+            <strong>{a.apelido}{a.papel !== 'aluno' && <span className="aluno-papel">{a.papel}</span>}</strong>
+            {editando === a.id ? (
+              <div className="aluno-edit">
+                <input className="input" value={turmaNova} onChange={(e) => setTurmaNova(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && salvarTurma(a)} placeholder="8º Ano A" autoFocus />
+                <button className="btn btn-red btn-sm" onClick={() => salvarTurma(a)}><Icon name="check" size={14} stroke={3} /></button>
+              </div>
+            ) : (
+              <button className="aluno-turma" onClick={() => { setEditando(a.id); setTurmaNova(a.turma || ''); }}>
+                {a.turma || 'sem turma'} <Icon name="bulb" size={12} />
+              </button>
+            )}
+          </div>
+          <div className="aluno-acoes">
+            <span className="aluno-notas">{a.notas || 0} notas</span>
+            <button className={`fala-toggle ${a.comunicacao_assistiva ? 'is-on' : ''}`} onClick={() => alternarFala(a)} title="Fala Comigo">
+              <Icon name="chat" size={16} />
+            </button>
+          </div>
+        </div>
+      ))}
+      <p className="central-dica">Toque na turma para editar. O ícone de balão liga o Fala Comigo para o aluno.</p>
     </div>
   );
 }

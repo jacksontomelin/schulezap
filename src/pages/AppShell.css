@@ -768,3 +768,40 @@
   .fala-fab { bottom: 28px; right: 28px; }
   .fala-grade { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
 }
+
+/* ============ CENTRAL DA ESCOLA ============ */
+.central-abas { display: flex; gap: 6px; margin-bottom: 16px; }
+.central-abas button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--cream); border: 2px solid var(--line); border-radius: 12px; padding: 11px 6px; font-family: var(--font); font-weight: 800; font-size: 13.5px; color: var(--ink-2); cursor: pointer; }
+.central-abas button.is-on { background: var(--red); border-color: var(--red); color: #fff; }
+.central-form { background: #fff; border: 2px solid var(--line); border-radius: 18px; padding: 16px; }
+.campo-rot { display: block; font-size: 13px; font-weight: 800; color: var(--ink); margin: 14px 0 6px; }
+.campo-rot:first-of-type { margin-top: 0; }
+.opcional { font-weight: 700; color: var(--ink-3); }
+.central-form select.input, .central-form input.input { width: 100%; }
+.central-form select.input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238A7A55' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; }
+.nota-input { font-size: 24px !important; font-weight: 900 !important; text-align: center; height: 60px !important; }
+.bim-botoes, .tipo-botoes { display: flex; gap: 8px; }
+.bim-btn { flex: 1; height: 46px; border-radius: 12px; background: var(--cream); border: 2px solid var(--line); font-family: var(--font); font-weight: 900; font-size: 15px; color: var(--ink-2); cursor: pointer; }
+.bim-btn.is-on { background: var(--gold); border-color: var(--gold-dark); color: #4A3000; }
+.tipo-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 46px; border-radius: 12px; background: var(--cream); border: 2px solid var(--line); font-family: var(--font); font-weight: 800; font-size: 13.5px; color: var(--ink-2); cursor: pointer; }
+.tipo-btn.is-on { background: var(--red); border-color: var(--red); color: #fff; }
+.lancada { display: flex; align-items: center; gap: 10px; background: var(--cream); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; }
+.lancada strong { font-size: 13.5px; font-weight: 900; color: var(--ink); }
+.lancada span { flex: 1; font-size: 12px; font-weight: 700; color: var(--ink-3); }
+.lancada em { font-style: normal; font-size: 17px; font-weight: 900; color: var(--red); }
+.central-dica { font-size: 12px; font-weight: 700; color: var(--ink-3); margin-top: 14px; line-height: 1.5; }
+
+/* alunos */
+.aluno-linha { display: flex; align-items: center; gap: 12px; background: #fff; border: 2px solid var(--line); border-radius: 14px; padding: 11px 12px; margin-bottom: 8px; }
+.aluno-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.aluno-info strong { font-size: 14.5px; font-weight: 900; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+.aluno-papel { font-size: 10px; font-weight: 900; background: var(--blue-light); color: var(--blue-text); padding: 1px 7px; border-radius: 999px; text-transform: uppercase; }
+.aluno-turma { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; background: var(--cream); border: 1px solid var(--line-2); border-radius: 8px; padding: 3px 9px; font-family: var(--font); font-weight: 700; font-size: 12px; color: var(--ink-2); cursor: pointer; }
+.aluno-turma:hover { border-color: var(--gold); }
+.aluno-edit { display: flex; gap: 6px; align-items: center; }
+.aluno-edit .input { height: 34px; font-size: 13px; }
+.aluno-edit .btn-sm { padding: 0 10px; height: 34px; }
+.aluno-acoes { display: flex; align-items: center; gap: 10px; }
+.aluno-notas { font-size: 11.5px; font-weight: 700; color: var(--ink-3); white-space: nowrap; }
+.fala-toggle { width: 36px; height: 36px; border-radius: 10px; background: var(--cream); border: 2px solid var(--line); color: var(--ink-3); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.fala-toggle.is-on { background: var(--red); border-color: var(--red); color: #fff; }
